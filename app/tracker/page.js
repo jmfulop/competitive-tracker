@@ -5,10 +5,10 @@ import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, Trendin
 import { supabase } from '@/lib/supabaseClient';
 
 const MATURITY_CONFIG = {
-  'Advanced':   { color: 'bg-green-500',  text: 'text-green-400',  bar: 'w-full',    label: 'Advanced',   score: 4 },
-  'Ambitious':  { color: 'bg-blue-500',   text: 'text-blue-400',   bar: 'w-3/4',     label: 'Ambitious',  score: 3 },
-  'Developing': { color: 'bg-yellow-500', text: 'text-yellow-400', bar: 'w-1/2',     label: 'Developing', score: 2 },
-  'Limited':    { color: 'bg-slate-500',  text: 'text-slate-400',  bar: 'w-1/4',     label: 'Limited',    score: 1 },
+  'Advanced':   { color: 'bg-green-500',  text: 'text-green-400',  bar: 'w-full',    label: 'Advanced',   score: 4, tooltip: 'Fully deployed AI at scale, proven in production across modules.' },
+  'Ambitious':  { color: 'bg-blue-500',   text: 'text-blue-400',   bar: 'w-3/4',     label: 'Ambitious',  score: 3, tooltip: 'Strong AI strategy, but real-world deployment is still catching up.' },
+  'Developing': { color: 'bg-yellow-500', text: 'text-yellow-400', bar: 'w-1/2',     label: 'Developing', score: 2, tooltip: 'Early stage AI — limited features in production, roadmap in progress.' },
+  'Limited':    { color: 'bg-slate-500',  text: 'text-slate-400',  bar: 'w-1/4',     label: 'Limited',    score: 1, tooltip: 'Minimal AI capability — basic automation or early experimentation only.' },
 };
 
 const IMPACT_CONFIG = {
@@ -365,8 +365,12 @@ export default function CompetitiveTracker() {
                     <div key={vendor.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-600 transition-all">
                       <div className="flex justify-between items-start mb-3">
                         <h3 className="font-bold text-white">{vendor.name}</h3>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${m.color} text-white`}>
+                        <span className={`relative group/badge text-xs font-semibold px-2 py-1 rounded-full ${m.color} text-white cursor-default`}>
                           {vendor.ai_maturity || 'Unknown'}
+                          <span className="absolute bottom-full right-0 mb-2 w-56 bg-slate-800 text-slate-200 text-xs rounded-lg px-3 py-2 shadow-xl border border-slate-700 opacity-0 group-hover/badge:opacity-100 transition-opacity pointer-events-none z-10 leading-relaxed">
+                            <strong className="text-white block mb-0.5">{vendor.ai_maturity}</strong>
+                            {m.tooltip}
+                          </span>
                         </span>
                       </div>
                       <div className="w-full bg-slate-800 rounded-full h-1.5 mb-4">
