@@ -38,6 +38,7 @@ export default function CompetitiveTracker() {
   const [signalFilter, setSignalFilter] = useState('All');
   const [impactFilter, setImpactFilter] = useState('All');
   const [showHelp, setShowHelp] = useState(false);
+  const [showSignalForm, setShowSignalForm] = useState(false); // ── collapsed by default
   const [toast, setToast] = useState(null); // ── NEW: { message, type }
   const [editingSignal, setEditingSignal] = useState(null); // ── NEW: signal being edited
   const [newSignal, setNewSignal] = useState(EMPTY_SIGNAL);
@@ -182,7 +183,8 @@ export default function CompetitiveTracker() {
     .filter(s => signalFilter === 'All' || s.status === signalFilter)
     .filter(s => impactFilter === 'All' || s.impact === impactFilter);
 
-  const validatedSignals = signals.filter(s => s.status === 'Validated');
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const validatedSignals = signals.filter(s => s.status === 'Validated' && new Date(s.updated_at) >= thirtyDaysAgo);
   const highImpactSignals = signals.filter(s => s.impact === 'High');
   const topVendors = [...vendors].sort((a, b) => (MATURITY_CONFIG[b.ai_maturity]?.score || 0) - (MATURITY_CONFIG[a.ai_maturity]?.score || 0));
 
@@ -392,7 +394,7 @@ export default function CompetitiveTracker() {
 
             {validatedSignals.length > 0 && (
               <div className="bg-green-950/50 border border-green-800/50 rounded-xl p-6">
-                <h2 className="text-green-400 font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> Validated Signals This Period</h2>
+                <h2 className="text-green-400 font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> Validated Signals — Last 30 Days</h2>
                 <ul className="space-y-2">
                   {validatedSignals.map(s => (
                     <li key={s.id} className="text-slate-200 text-sm flex items-start gap-2">
@@ -410,7 +412,7 @@ export default function CompetitiveTracker() {
                 {topVendors.map(vendor => {
                   const m = MATURITY_CONFIG[vendor.ai_maturity] || MATURITY_CONFIG['Limited'];
                   return (
-                    <div key={vendor.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-600 transition-all">
+                    <div key={vendor.id} onClick={() => { setSelectedVendorId(vendor.id); setTab('editor'); }} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-600 hover:border-blue-500/40 transition-all cursor-pointer group">
                       <div className="flex justify-between items-start mb-3">
                         <h3 className="font-bold text-white">{vendor.name}</h3>
                         <span className={`relative group/badge text-xs font-semibold px-2 py-1 rounded-full ${m.color} text-white cursor-default`}>
@@ -500,9 +502,17 @@ export default function CompetitiveTracker() {
               <span className="text-xs text-slate-600 ml-1">{filteredSignals.length} signal{filteredSignals.length !== 1 ? 's' : ''}</span>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-              <h3 className="font-semibold text-white mb-4">Log New Signal</h3>
-              <div className="space-y-3">
+            {/* ── Collapsible signal form */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <button onClick={() => setShowSignalForm(v => !v)}
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-800/50 transition-all">
+                <span className="font-semibold text-white flex items-center gap-2">
+                  <Plus size={16} className="text-purple-400" /> Log New Signal
+                </span>
+                <span className="text-slate-400 text-xs">{showSignalForm ? '▲ Collapse' : '▼ Expand'}</span>
+              </button>
+              {showSignalForm && (
+                <div className="px-6 pb-6 space-y-3 border-t border-slate-800 pt-4">
                 <textarea value={newSignal.observation}
                   onChange={e => setNewSignal({...newSignal, observation: e.target.value})}
                   placeholder="What did you observe? Be specific — the more detail, the better..."
@@ -554,6 +564,7 @@ export default function CompetitiveTracker() {
                   <Plus size={15} /> Log Signal
                 </button>
               </div>
+              )}
             </div>
 
             <div className="space-y-3">
