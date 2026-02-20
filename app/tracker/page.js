@@ -292,8 +292,8 @@ export default function CompetitiveTracker() {
                 <h3 className="text-blue-400 font-semibold mb-3 flex items-center gap-2"><BookOpen size={16} /> The three tabs</h3>
                 <div className="space-y-3">
                   {[
-                    { tab: 'Dashboard', color: 'text-blue-300', desc: 'Your high-level view. Shows KPI cards (click them to filter Signals), vendor AI maturity rankings, and strategic opportunities vs threats. Start here for a quick read of the competitive landscape.' },
-                    { tab: 'Signals', color: 'text-purple-300', desc: 'Your weak signals journal. Log observations from customer calls, release notes, analyst reports, or anything that hints at where the market is heading. Rate confidence and impact, then validate or dismiss over time.' },
+                    { tab: 'Dashboard', color: 'text-blue-300', desc: 'Your high-level view. Shows KPI cards (click them to filter Signals), vendor AI maturity rankings, and strategic opportunities vs threats. Click any vendor card to jump directly to that vendor in the Editor tab.' },
+                    { tab: 'Signals', color: 'text-purple-300', desc: 'Your weak signals journal. Click "+ Log New Signal" to expand the form and log a new observation. Rate confidence and impact, then validate or dismiss over time. The Dashboard shows signals validated in the last 30 days.' },
                     { tab: 'Editor', color: 'text-slate-300', desc: 'Manage vendor data manually. Update AI maturity ratings, add/remove capabilities, log sources, and write strategic notes per vendor. Use this after researching a competitor.' },
                   ].map(({ tab, color, desc }) => (
                     <div key={tab} className="bg-slate-800 rounded-xl p-4">
