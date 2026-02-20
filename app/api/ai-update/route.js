@@ -20,55 +20,41 @@ export async function POST() {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
+        max_tokens: 8000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: `Search for the latest AI capabilities and news (last 30 days) for these ERP vendors.
+          content: `Search for the latest AI capabilities and news (last 30 days) for these 12 ERP vendors.
 
 You MUST use these EXACT names in your response:
 - "NetSuite"
 - "SAP S/4HANA Cloud"
 - "Microsoft Dynamics 365"
 - "Oracle Cloud ERP"
+- "SAP Business One"
+- "SYSPRO"
+- "Epicor Kinetic"
+- "QAD Adaptive ERP"
+- "Unit4 ERP"
+- "Odoo"
+- "Striven"
+- "Campfire"
 
-Return ONLY a valid JSON array with no other text, no markdown, no code blocks:
+Return ONLY a valid JSON array with no other text, no markdown, no code blocks. Include all 12 vendors:
 [
   {
     "name": "NetSuite",
-    "ai_maturity": "Limited",
+    "ai_maturity": "Advanced",
     "capabilities": ["capability 1", "capability 2", "capability 3"],
     "implementation_claims": "Brief description of their AI claims in 1-2 sentences",
     "notes": "Strategic assessment in 2-3 sentences",
     "sources": ["source title or url 1", "source title or url 2"]
-  },
-  {
-    "name": "SAP S/4HANA Cloud",
-    "ai_maturity": "Ambitious",
-    "capabilities": ["capability 1", "capability 2", "capability 3"],
-    "implementation_claims": "Brief description",
-    "notes": "Strategic assessment",
-    "sources": ["source 1", "source 2"]
-  },
-  {
-    "name": "Microsoft Dynamics 365",
-    "ai_maturity": "Advanced",
-    "capabilities": ["capability 1", "capability 2", "capability 3"],
-    "implementation_claims": "Brief description",
-    "notes": "Strategic assessment",
-    "sources": ["source 1", "source 2"]
-  },
-  {
-    "name": "Oracle Cloud ERP",
-    "ai_maturity": "Limited",
-    "capabilities": ["capability 1", "capability 2", "capability 3"],
-    "implementation_claims": "Brief description",
-    "notes": "Strategic assessment",
-    "sources": ["source 1", "source 2"]
   }
 ]
 
-ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"`
+ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"
+
+For smaller/newer vendors like Striven and Campfire where less info is available, use your best knowledge and set ai_maturity to "Limited" or "Developing" as appropriate.`
         }],
       }),
     });
