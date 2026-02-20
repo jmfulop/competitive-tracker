@@ -246,30 +246,30 @@ export default function CompetitiveTracker() {
 
               {/* Weak signals */}
               <div>
-                <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2"><Radio size={16} /> What is a weak signal?</h3>
+                <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2"><Radio size={16} /> Logging weak signals</h3>
                 <p className="text-slate-300 text-sm leading-relaxed mb-3">
-                  A weak signal is an early, subtle indicator that something significant might be happening in the market — before it becomes obvious. Think of it as a rumble before the earthquake. Examples:
+                  Signals are logged <strong className="text-white">manually by you</strong> in the Signals tab. Log an observation as <strong className="text-white">Monitoring</strong> when you first spot it. Mark it <strong className="text-white">Validated</strong> if it proves true, or <strong className="text-white">Invalidated</strong> if it doesn't. Validated signals surface automatically on the Dashboard.
                 </p>
+                <p className="text-slate-400 text-sm mb-2">Good signals to log:</p>
                 <ul className="space-y-1.5">
                   {[
-                    'A customer asks if you support a feature a competitor just announced',
-                    'A vendor quietly updates their pricing page',
-                    'An analyst mentions a trend in passing on a webinar',
+                    'A customer asks about a feature a competitor just announced',
+                    'A vendor quietly changes their pricing or packaging',
                     'A partner starts recommending a competitor more often',
+                    'An analyst mentions a market shift in passing',
                   ].map((ex, i) => (
                     <li key={i} className="text-slate-400 text-sm flex items-start gap-2">
                       <span className="text-purple-400 mt-0.5">→</span>{ex}
                     </li>
                   ))}
                 </ul>
-                <p className="text-slate-400 text-sm mt-3 leading-relaxed">Log these as Monitoring, then mark them Validated if they prove true, or Invalidated if they don't. Over time this builds your foresight muscle.</p>
               </div>
 
               {/* AI Update */}
               <div>
                 <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2"><Cpu size={16} /> AI Update button</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  The AI Update button calls Claude via the Anthropic API to automatically research and refresh vendor capabilities based on the latest publicly available information. It updates each vendor's capability list and notes. Run it periodically (e.g. after a competitor release) to keep the data fresh without manual research. It does <strong className="text-white">not</strong> overwrite your manually added strategic notes or sources.
+                  The AI Update button attempts to refresh <strong className="text-white">vendor capabilities and notes</strong> in the Editor using the Anthropic API. It only updates vendor data — it does <strong className="text-white">not</strong> log signals for you. Signals always require manual input. If AI Update doesn't appear to be changing anything, check the browser console or ask your tracker admin to verify the API route is connected.
                 </p>
               </div>
 
