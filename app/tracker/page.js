@@ -223,7 +223,7 @@ export default function CompetitiveTracker() {
               <div>
                 <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2"><BarChart2 size={16} /> What is this tracker?</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  This is a competitive intelligence tool built for MYOB's Acumatica team. It tracks how major ERP vendors (NetSuite, SAP, Microsoft Dynamics, Oracle) are positioning their AI capabilities — and helps you spot early market trends before they become obvious. Use it to inform roadmap decisions, prepare executive briefings, and stay ahead of competitor moves.
+                  This is a competitive intelligence tool built for the Product Management team. It tracks how major ERP vendors (NetSuite, SAP, Microsoft Dynamics, Oracle) are positioning their AI capabilities — and helps you spot early market trends before they become obvious. Use it to inform roadmap decisions, prepare executive briefings, and stay ahead of competitor moves.
                 </p>
               </div>
 
