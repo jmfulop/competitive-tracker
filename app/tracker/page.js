@@ -66,6 +66,11 @@ export default function CompetitiveTracker() {
   };
 
   const handleAiUpdate = async () => {
+    const pin = window.prompt('Enter PIN to run AI Update:');
+    if (pin !== '0832') {
+      if (pin !== null) alert('Incorrect PIN.');
+      return;
+    }
     try {
       setAiUpdating(true);
       const res = await fetch('/api/ai-update', { method: 'POST' });
