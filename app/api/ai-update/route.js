@@ -2,14 +2,14 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
 const VENDOR_NAMES = ['NetSuite', 'SAP S/4HANA Cloud', 'Microsoft Dynamics 365', 'Oracle Cloud ERP'];
 
 export async function POST() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -84,7 +84,6 @@ ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"`
       .map(block => block.text)
       .join('');
 
-    // Strip any markdown code blocks if present
     const cleaned = text.replace(/```json|```/g, '').trim();
     const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
 
@@ -96,7 +95,6 @@ ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"`
 
     const results = [];
     for (const vendor of vendors) {
-      // Only process known vendor names
       if (!VENDOR_NAMES.includes(vendor.name)) continue;
 
       const { data: existing } = await supabase
@@ -106,7 +104,6 @@ ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"`
         .single();
 
       if (existing) {
-        // Update vendor core fields
         await supabase
           .from('vendors')
           .update({
@@ -117,7 +114,6 @@ ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"`
           })
           .eq('id', existing.id);
 
-        // Replace capabilities
         await supabase.from('capabilities').delete().eq('vendor_id', existing.id);
         if (vendor.capabilities?.length) {
           await supabase.from('capabilities').insert(
@@ -125,7 +121,6 @@ ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"`
           );
         }
 
-        // Replace sources
         await supabase.from('sources').delete().eq('vendor_id', existing.id);
         if (vendor.sources?.length) {
           await supabase.from('sources').insert(
@@ -135,7 +130,6 @@ ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"`
 
         results.push({ vendor: vendor.name, action: 'updated' });
       } else {
-        // Insert new vendor
         const { data: newVendor } = await supabase
           .from('vendors')
           .insert({
