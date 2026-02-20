@@ -1,11 +1,30 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Eye, Edit2, RefreshCw, Radio, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Download, Eye, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function DualModeTracker() {
-  const [mode, setMode] = useState('present');
+const MATURITY_CONFIG = {
+  'Advanced':   { color: 'bg-green-500',  text: 'text-green-400',  bar: 'w-full',    label: 'Advanced',   score: 4 },
+  'Ambitious':  { color: 'bg-blue-500',   text: 'text-blue-400',   bar: 'w-3/4',     label: 'Ambitious',  score: 3 },
+  'Developing': { color: 'bg-yellow-500', text: 'text-yellow-400', bar: 'w-1/2',     label: 'Developing', score: 2 },
+  'Limited':    { color: 'bg-slate-500',  text: 'text-slate-400',  bar: 'w-1/4',     label: 'Limited',    score: 1 },
+};
+
+const IMPACT_CONFIG = {
+  High:   { color: 'bg-red-500/20 text-red-300 border-red-500/30',    dot: 'bg-red-400',    priority: 1 },
+  Medium: { color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', dot: 'bg-yellow-400', priority: 2 },
+  Low:    { color: 'bg-slate-500/20 text-slate-300 border-slate-500/30',  dot: 'bg-slate-400',  priority: 3 },
+};
+
+const STATUS_CONFIG = {
+  Monitoring:  { color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
+  Validated:   { color: 'bg-green-500/20 text-green-300 border-green-500/30' },
+  Invalidated: { color: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
+};
+
+export default function CompetitiveTracker() {
+  const [tab, setTab] = useState('dashboard');
   const [vendors, setVendors] = useState([]);
   const [signals, setSignals] = useState([]);
   const [selectedVendorId, setSelectedVendorId] = useState(null);
@@ -13,21 +32,13 @@ export default function DualModeTracker() {
   const [aiUpdating, setAiUpdating] = useState(false);
   const [newCapability, setNewCapability] = useState('');
   const [newSource, setNewSource] = useState('');
-  const [expandedSignal, setExpandedSignal] = useState(null);
+  const [signalFilter, setSignalFilter] = useState('All');
   const [newSignal, setNewSignal] = useState({
-    observation: '',
-    source: '',
-    vendor_tag: '',
-    confidence: 5,
-    timeline: '6 months',
-    impact: 'Medium',
-    notes: ''
+    observation: '', source: '', vendor_tag: '', confidence: 50,
+    timeline: '6 months', impact: 'Medium', notes: '', status: 'Monitoring'
   });
 
-  useEffect(() => {
-    fetchVendors();
-    fetchSignals();
-  }, []);
+  useEffect(() => { fetchVendors(); fetchSignals(); }, []);
 
   const fetchVendors = async () => {
     try {
@@ -42,11 +53,8 @@ export default function DualModeTracker() {
       );
       setVendors(vendorsWithData);
       if (vendorsWithData.length > 0) setSelectedVendorId(vendorsWithData[0].id);
-    } catch (error) {
-      console.error('Error fetching vendors:', error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   const fetchSignals = async () => {
@@ -57,28 +65,19 @@ export default function DualModeTracker() {
   const handleAiUpdate = async () => {
     try {
       setAiUpdating(true);
-      const response = await fetch('/api/ai-update', { method: 'POST' });
-      const result = await response.json();
-      if (result.success) {
-        await fetchVendors();
-        alert(`✅ Updated ${result.vendorCount} vendors with latest AI research!`);
-      } else {
-        alert('Update failed: ' + result.error);
-      }
-    } catch (err) {
-      alert('Error: ' + err.message);
-    } finally {
-      setAiUpdating(false);
-    }
+      const res = await fetch('/api/ai-update', { method: 'POST' });
+      const result = await res.json();
+      if (result.success) { await fetchVendors(); alert(`✅ Updated ${result.vendorCount} vendors!`); }
+      else alert('Update failed: ' + result.error);
+    } catch (err) { alert('Error: ' + err.message); }
+    finally { setAiUpdating(false); }
   };
 
   const addSignal = async () => {
     if (!newSignal.observation.trim()) return;
-    const { error } = await supabase.from('weak_signals').insert([newSignal]);
-    if (!error) {
-      setNewSignal({ observation: '', source: '', vendor_tag: '', confidence: 5, timeline: '6 months', impact: 'Medium', notes: '' });
-      fetchSignals();
-    }
+    await supabase.from('weak_signals').insert([newSignal]);
+    setNewSignal({ observation: '', source: '', vendor_tag: '', confidence: 50, timeline: '6 months', impact: 'Medium', notes: '', status: 'Monitoring' });
+    fetchSignals();
   };
 
   const updateSignalStatus = async (id, status) => {
@@ -102,476 +101,412 @@ export default function DualModeTracker() {
   const addCapability = async () => {
     if (!newCapability.trim() || !selectedVendor) return;
     await supabase.from('capabilities').insert([{ vendor_id: selectedVendor.id, capability: newCapability }]);
-    setNewCapability('');
-    fetchVendors();
+    setNewCapability(''); fetchVendors();
   };
 
-  const removeCapability = async (capId) => {
-    await supabase.from('capabilities').delete().eq('id', capId);
-    fetchVendors();
+  const removeCapability = async (id) => {
+    await supabase.from('capabilities').delete().eq('id', id); fetchVendors();
   };
 
   const addSource = async () => {
     if (!newSource.trim() || !selectedVendor) return;
     await supabase.from('sources').insert([{ vendor_id: selectedVendor.id, source: newSource }]);
-    setNewSource('');
-    fetchVendors();
+    setNewSource(''); fetchVendors();
   };
 
-  const removeSource = async (srcId) => {
-    await supabase.from('sources').delete().eq('id', srcId);
-    fetchVendors();
+  const removeSource = async (id) => {
+    await supabase.from('sources').delete().eq('id', id); fetchVendors();
   };
 
   const downloadAsJSON = () => {
-    const exportData = { generatedBy: 'Jean Fulop', generatedAt: new Date().toISOString(), vendors, signals };
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `erp-competitive-analysis-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
+    const blob = new Blob([JSON.stringify({ vendors, signals }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `erp-tracker-${new Date().toISOString().split('T')[0]}.json`; a.click();
   };
 
-  const signalsByStatus = {
-    Monitoring: signals.filter(s => s.status === 'Monitoring'),
-    Validated: signals.filter(s => s.status === 'Validated'),
-    Invalidated: signals.filter(s => s.status === 'Invalidated'),
-  };
+  const sortedSignals = [...signals].sort((a, b) => {
+    const pa = IMPACT_CONFIG[a.impact]?.priority || 3;
+    const pb = IMPACT_CONFIG[b.impact]?.priority || 3;
+    return pa - pb;
+  });
 
-  const impactColor = (impact) => ({
-    High: 'bg-red-600', Medium: 'bg-yellow-600', Low: 'bg-slate-500'
-  }[impact] || 'bg-slate-500');
+  const filteredSignals = signalFilter === 'All' ? sortedSignals : sortedSignals.filter(s => s.status === signalFilter);
+  const validatedSignals = signals.filter(s => s.status === 'Validated');
+  const highImpactSignals = signals.filter(s => s.impact === 'High');
+  const topVendors = [...vendors].sort((a, b) => (MATURITY_CONFIG[b.ai_maturity]?.score || 0) - (MATURITY_CONFIG[a.ai_maturity]?.score || 0));
 
-  const statusColor = (status) => ({
-    Monitoring: 'bg-blue-600', Validated: 'bg-green-600', Invalidated: 'bg-slate-500'
-  }[status] || 'bg-slate-500');
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-white text-2xl">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-400">Loading tracker...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // ===== PRESENTATION MODE =====
-  if (mode === 'present') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex gap-3">
-                <button onClick={() => setMode('edit')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Edit2 size={18} /> Editor
+  return (
+    <div className="min-h-screen bg-slate-950 text-white">
+
+      {/* ── TOP NAV ── */}
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-8">
+            <div>
+              <h1 className="text-lg font-bold text-white">ERP Competitive Tracker</h1>
+              <p className="text-xs text-slate-500">by Jean Fulop · {new Date().toLocaleDateString('en-AU')}</p>
+            </div>
+            <nav className="flex gap-1">
+              {[
+                { key: 'dashboard', label: 'Dashboard', icon: <TrendingUp size={15} /> },
+                { key: 'signals',   label: `Signals (${signals.length})`, icon: <Radio size={15} /> },
+                { key: 'editor',    label: 'Editor', icon: <Edit2 size={15} /> },
+              ].map(({ key, label, icon }) => (
+                <button key={key} onClick={() => setTab(key)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    tab === key ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}>
+                  {icon}{label}
                 </button>
-                <button onClick={() => setMode('signals')} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Radio size={18} /> Weak Signals ({signals.length})
-                </button>
-              </div>
-              <button onClick={handleAiUpdate} disabled={aiUpdating} className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <RefreshCw size={18} className={aiUpdating ? 'animate-spin' : ''} />
-                {aiUpdating ? 'AI Updating...' : '🤖 AI Update'}
-              </button>
-            </div>
-            <h1 className="text-5xl font-bold text-white mb-2">ERP Competitive AI Analysis</h1>
-            <p className="text-slate-300 text-lg">Market positioning and strategic implications</p>
-            <p className="text-slate-400 text-sm mt-2">By Jean Fulop | {new Date().toLocaleDateString()}</p>
+              ))}
+            </nav>
           </div>
-
-          <div className="bg-blue-900 rounded-lg p-8 mb-12 border-l-4 border-blue-400">
-            <h2 className="text-2xl font-bold text-white mb-4">Executive Summary</h2>
-            <ul className="text-slate-200 space-y-3">
-              <li>✓ <strong>Microsoft leads</strong> in practical AI deployment with mature Copilot features</li>
-              <li>✓ <strong>SAP is most ambitious</strong> on agentic roadmap but still immature</li>
-              <li>✓ <strong>NetSuite focuses</strong> on intelligent automation (rules-based, not agentic)</li>
-              <li>✓ <strong>Oracle is behind</strong> on agentic features; strong analytics focus</li>
-            </ul>
+          <div className="flex gap-3">
+            <button onClick={downloadAsJSON} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+              <Download size={15} /> Export
+            </button>
+            <button onClick={handleAiUpdate} disabled={aiUpdating}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-teal-600 hover:bg-teal-700 disabled:opacity-50 transition-all">
+              <RefreshCw size={15} className={aiUpdating ? 'animate-spin' : ''} />
+              {aiUpdating ? 'Updating...' : 'AI Update'}
+            </button>
           </div>
+        </div>
+      </header>
 
-          {signalsByStatus.Validated.length > 0 && (
-            <div className="bg-green-900 rounded-lg p-6 mb-12 border-l-4 border-green-400">
-              <h2 className="text-xl font-bold text-white mb-3">✅ Validated Signals This Period</h2>
-              <ul className="text-slate-200 space-y-2">
-                {signalsByStatus.Validated.map(s => (
-                  <li key={s.id}>• <strong>{s.vendor_tag && `[${s.vendor_tag}]`}</strong> {s.observation}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+      <main className="max-w-7xl mx-auto px-6 py-8">
 
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-white mb-6">Competitive Matrix</h2>
-            <div className="overflow-x-auto bg-slate-700 rounded-lg">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-600 border-b border-slate-500">
-                    <th className="px-6 py-4 text-left text-white font-semibold">Vendor</th>
-                    <th className="px-6 py-4 text-left text-white font-semibold">AI Maturity</th>
-                    <th className="px-6 py-4 text-left text-white font-semibold">Key Features</th>
-                    <th className="px-6 py-4 text-left text-white font-semibold">Implementation Impact</th>
-                    <th className="px-6 py-4 text-left text-white font-semibold">Strategic Position</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vendors.map((vendor) => (
-                    <tr key={vendor.id} className="border-b border-slate-600 hover:bg-slate-600">
-                      <td className="px-6 py-4 text-white font-semibold">{vendor.name}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          vendor.ai_maturity === 'Advanced' ? 'bg-green-600 text-white' :
-                          vendor.ai_maturity === 'Ambitious' ? 'bg-blue-600 text-white' :
-                          vendor.ai_maturity === 'Developing' ? 'bg-yellow-600 text-white' :
-                          'bg-slate-500 text-white'
-                        }`}>{vendor.ai_maturity || 'Unknown'}</span>
-                      </td>
-                      <td className="px-6 py-4 text-slate-200">{vendor.capabilities.slice(0, 2).map(c => c.capability).join(', ')}...</td>
-                      <td className="px-6 py-4 text-slate-200 text-sm">{vendor.implementation_claims || 'N/A'}</td>
-                      <td className="px-6 py-4 text-slate-200 text-sm">{vendor.notes ? vendor.notes.substring(0, 50) : 'N/A'}...</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* ══════════════════════════════
+            DASHBOARD TAB
+        ══════════════════════════════ */}
+        {tab === 'dashboard' && (
+          <div className="space-y-8">
 
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-white mb-6">Vendor Profiles</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {vendors.map((vendor) => (
-                <div key={vendor.id} className="bg-slate-700 rounded-lg p-6 border-l-4 border-blue-500">
-                  <h3 className="text-2xl font-bold text-white mb-4">{vendor.name}</h3>
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-2">AI Capabilities</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {vendor.capabilities.map((cap, idx) => (
-                        <span key={idx} className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full">{cap.capability}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-2">Implementation Claims</h4>
-                    <p className="text-slate-200">{vendor.implementation_claims || 'N/A'}</p>
-                  </div>
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-2">Strategic Assessment</h4>
-                    <p className="text-slate-200 text-sm">{vendor.notes || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-300 mb-2">Sources</h4>
-                    <ul className="text-slate-200 text-sm space-y-1">
-                      {vendor.sources.map((src, idx) => (<li key={idx}>• {src.source}</li>))}
-                    </ul>
-                  </div>
+            {/* KPI row */}
+            <div className="grid grid-cols-4 gap-4">
+              {[
+                { label: 'Vendors Tracked', value: vendors.length, icon: <Shield size={20} />, color: 'text-blue-400' },
+                { label: 'Active Signals', value: signals.filter(s => s.status === 'Monitoring').length, icon: <Radio size={20} />, color: 'text-purple-400' },
+                { label: 'Validated Signals', value: validatedSignals.length, icon: <TrendingUp size={20} />, color: 'text-green-400' },
+                { label: 'High Impact Threats', value: highImpactSignals.length, icon: <AlertTriangle size={20} />, color: 'text-red-400' },
+              ].map(({ label, value, icon, color }) => (
+                <div key={label} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                  <div className={`${color} mb-3`}>{icon}</div>
+                  <div className="text-3xl font-bold text-white mb-1">{value}</div>
+                  <div className="text-sm text-slate-400">{label}</div>
                 </div>
               ))}
             </div>
-          </div>
 
-          <div className="bg-slate-700 rounded-lg p-8 mb-12">
-            <h2 className="text-2xl font-bold text-white mb-6">Strategic Implications for Acumatica</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-bold text-green-400 mb-3">🎯 Opportunities</h3>
-                <ul className="text-slate-200 space-y-2">
-                  <li>• Faster agentic adoption could differentiate vs. enterprise vendors</li>
-                  <li>• Mid-market focus = less competition on agentic features</li>
-                  <li>• Simpler deployment = competitive advantage in speed-to-value</li>
+            {/* Validated signals callout */}
+            {validatedSignals.length > 0 && (
+              <div className="bg-green-950/50 border border-green-800/50 rounded-xl p-6">
+                <h2 className="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                  <TrendingUp size={18} /> Validated Signals This Period
+                </h2>
+                <ul className="space-y-2">
+                  {validatedSignals.map(s => (
+                    <li key={s.id} className="text-slate-200 text-sm flex items-start gap-2">
+                      <span className="text-green-400 mt-0.5">✓</span>
+                      <span>{s.vendor_tag && <strong className="text-white">[{s.vendor_tag}]</strong>} {s.observation}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-red-400 mb-3">⚠️ Threats</h3>
-                <ul className="text-slate-200 space-y-2">
-                  <li>• Competitors moving faster on agentic capabilities</li>
-                  <li>• Microsoft's Copilot ecosystem is difficult to compete with</li>
-                  <li>• Customer expectations rising rapidly on AI features</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+            )}
 
-  // ===== WEAK SIGNALS MODE =====
-  if (mode === 'signals') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h1 className="text-4xl font-bold text-white mb-2">Weak Signal Journal</h1>
-                <p className="text-slate-300">Spot early market trends before they become obvious</p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setMode('present')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Eye size={18} /> Presentation
-                </button>
-                <button onClick={() => setMode('edit')} className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Edit2 size={18} /> Editor
-                </button>
-                <button onClick={downloadAsJSON} className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Download size={18} /> Export
-                </button>
-              </div>
-            </div>
-
-            {/* Stats bar */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="bg-blue-900 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-white">{signalsByStatus.Monitoring.length}</div>
-                <div className="text-blue-300 text-sm mt-1">Monitoring</div>
-              </div>
-              <div className="bg-green-900 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-white">{signalsByStatus.Validated.length}</div>
-                <div className="text-green-300 text-sm mt-1">Validated</div>
-              </div>
-              <div className="bg-slate-700 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-white">{signalsByStatus.Invalidated.length}</div>
-                <div className="text-slate-300 text-sm mt-1">Invalidated</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Log new signal */}
-          <div className="bg-slate-700 rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">Log a New Signal</h2>
-            <div className="space-y-4">
-              <textarea
-                value={newSignal.observation}
-                onChange={e => setNewSignal({...newSignal, observation: e.target.value})}
-                placeholder="What did you observe? e.g. 'NetSuite quietly released AI automation feature in release notes'"
-                className="w-full bg-slate-600 text-white rounded-lg p-3 border border-slate-500 h-20"
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={newSignal.source}
-                  onChange={e => setNewSignal({...newSignal, source: e.target.value})}
-                  placeholder="Source (e.g. customer call, release notes)"
-                  className="bg-slate-600 text-white rounded-lg p-2 border border-slate-500"
-                />
-                <select
-                  value={newSignal.vendor_tag}
-                  onChange={e => setNewSignal({...newSignal, vendor_tag: e.target.value})}
-                  className="bg-slate-600 text-white rounded-lg p-2 border border-slate-500"
-                >
-                  <option value="">No vendor tag</option>
-                  {vendors.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
-                  <option value="Acumatica">Acumatica</option>
-                  <option value="General Market">General Market</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-slate-300 text-sm mb-1 block">Confidence: {newSignal.confidence}/10</label>
-                  <input
-                    type="range" min="1" max="10"
-                    value={newSignal.confidence}
-                    onChange={e => setNewSignal({...newSignal, confidence: parseInt(e.target.value)})}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-300 text-sm mb-1 block">Timeline</label>
-                  <select
-                    value={newSignal.timeline}
-                    onChange={e => setNewSignal({...newSignal, timeline: e.target.value})}
-                    className="w-full bg-slate-600 text-white rounded-lg p-2 border border-slate-500"
-                  >
-                    <option>3 months</option>
-                    <option>6 months</option>
-                    <option>12 months</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-300 text-sm mb-1 block">Impact</label>
-                  <select
-                    value={newSignal.impact}
-                    onChange={e => setNewSignal({...newSignal, impact: e.target.value})}
-                    className="w-full bg-slate-600 text-white rounded-lg p-2 border border-slate-500"
-                  >
-                    <option>Low</option>
-                    <option>Medium</option>
-                    <option>High</option>
-                  </select>
-                </div>
-              </div>
-              <textarea
-                value={newSignal.notes}
-                onChange={e => setNewSignal({...newSignal, notes: e.target.value})}
-                placeholder="Why does this matter? What would validate it?"
-                className="w-full bg-slate-600 text-white rounded-lg p-3 border border-slate-500 h-16"
-              />
-              <button onClick={addSignal} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg flex items-center gap-2">
-                <Plus size={18} /> Log Signal
-              </button>
-            </div>
-          </div>
-
-          {/* Signal list by status */}
-          {['Monitoring', 'Validated', 'Invalidated'].map(statusGroup => (
-            <div key={statusGroup} className="mb-8">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-sm ${statusColor(statusGroup)}`}>{statusGroup}</span>
-                <span className="text-slate-400 text-sm">({signalsByStatus[statusGroup].length})</span>
-              </h2>
-              <div className="space-y-3">
-                {signalsByStatus[statusGroup].length === 0 && (
-                  <p className="text-slate-500 italic">No signals yet</p>
-                )}
-                {signalsByStatus[statusGroup].map(signal => (
-                  <div key={signal.id} className="bg-slate-700 rounded-lg p-4 border-l-4 border-purple-500">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{signal.observation}</p>
-                        <div className="flex gap-3 mt-2 flex-wrap">
-                          {signal.vendor_tag && <span className="text-xs bg-slate-600 text-slate-200 px-2 py-1 rounded">{signal.vendor_tag}</span>}
-                          {signal.source && <span className="text-xs text-slate-400">📎 {signal.source}</span>}
-                          <span className="text-xs text-slate-400">🎯 Confidence: {signal.confidence}/10</span>
-                          <span className="text-xs text-slate-400">⏱ {signal.timeline}</span>
-                          <span className={`text-xs px-2 py-1 rounded text-white ${impactColor(signal.impact)}`}>{signal.impact} impact</span>
-                          <span className="text-xs text-slate-400">{new Date(signal.spotted_at).toLocaleDateString()}</span>
-                        </div>
-                        {signal.notes && (
-                          <p className="text-slate-300 text-sm mt-2 italic">{signal.notes}</p>
+            {/* Vendor cards */}
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4">Vendor AI Maturity</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {topVendors.map(vendor => {
+                  const m = MATURITY_CONFIG[vendor.ai_maturity] || MATURITY_CONFIG['Limited'];
+                  return (
+                    <div key={vendor.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-600 transition-all">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-bold text-white">{vendor.name}</h3>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${m.color} text-white`}>
+                          {vendor.ai_maturity || 'Unknown'}
+                        </span>
+                      </div>
+                      {/* Maturity bar */}
+                      <div className="w-full bg-slate-800 rounded-full h-1.5 mb-4">
+                        <div className={`${m.color} h-1.5 rounded-full ${m.bar}`} />
+                      </div>
+                      {/* Top 3 capabilities */}
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {vendor.capabilities.slice(0, 3).map((cap, i) => (
+                          <span key={i} className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-md">{cap.capability}</span>
+                        ))}
+                        {vendor.capabilities.length > 3 && (
+                          <span className="text-xs text-slate-500 px-2 py-1">+{vendor.capabilities.length - 3} more</span>
                         )}
                       </div>
-                      <div className="flex gap-2 ml-4">
-                        {signal.status === 'Monitoring' && (
-                          <>
-                            <button onClick={() => updateSignalStatus(signal.id, 'Validated')} className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded">✓ Validate</button>
-                            <button onClick={() => updateSignalStatus(signal.id, 'Invalidated')} className="bg-slate-500 hover:bg-slate-400 text-white text-xs px-3 py-1 rounded">✗ Invalidate</button>
-                          </>
-                        )}
+                      {vendor.capabilities.length === 0 && (
+                        <p className="text-xs text-slate-500 italic mb-3">No capabilities yet — run AI Update</p>
+                      )}
+                      <p className="text-xs text-slate-400 line-clamp-2">{vendor.notes || 'No notes yet.'}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Strategic implications */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                <h3 className="text-green-400 font-semibold mb-4 flex items-center gap-2"><Zap size={16} /> Opportunities</h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">→</span> Faster agentic adoption could differentiate vs enterprise vendors</li>
+                  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">→</span> Mid-market focus = less competition on agentic features</li>
+                  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">→</span> Simpler deployment = competitive advantage in speed-to-value</li>
+                  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">→</span> SAP's low Joule adoption is a direct positioning opportunity</li>
+                </ul>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                <h3 className="text-red-400 font-semibold mb-4 flex items-center gap-2"><AlertTriangle size={16} /> Threats</h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-start gap-2"><span className="text-red-400 mt-0.5">→</span> Competitors moving faster on agentic capabilities</li>
+                  <li className="flex items-start gap-2"><span className="text-red-400 mt-0.5">→</span> Microsoft Copilot bundling makes AI appear free to M365 customers</li>
+                  <li className="flex items-start gap-2"><span className="text-red-400 mt-0.5">→</span> Customer expectations rising rapidly on AI features</li>
+                  <li className="flex items-start gap-2"><span className="text-red-400 mt-0.5">→</span> Odoo growing fast as low-cost alternative in lower mid-market</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════
+            SIGNALS TAB
+        ══════════════════════════════ */}
+        {tab === 'signals' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">Weak Signal Journal</h2>
+              <div className="flex gap-2">
+                {['All', 'Monitoring', 'Validated', 'Invalidated'].map(f => (
+                  <button key={f} onClick={() => setSignalFilter(f)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      signalFilter === f ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                    }`}>{f}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Log new signal */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+              <h3 className="font-semibold text-white mb-4">Log New Signal</h3>
+              <div className="space-y-3">
+                <textarea value={newSignal.observation}
+                  onChange={e => setNewSignal({...newSignal, observation: e.target.value})}
+                  placeholder="What did you observe? Be specific — the more detail, the better..."
+                  className="w-full bg-slate-800 text-white rounded-lg p-3 border border-slate-700 h-20 text-sm resize-none focus:outline-none focus:border-blue-500" />
+                <div className="grid grid-cols-2 gap-3">
+                  <input type="text" value={newSignal.source}
+                    onChange={e => setNewSignal({...newSignal, source: e.target.value})}
+                    placeholder="Source (customer call, release notes, analyst report...)"
+                    className="bg-slate-800 text-white rounded-lg p-2.5 border border-slate-700 text-sm focus:outline-none focus:border-blue-500" />
+                  <select value={newSignal.vendor_tag}
+                    onChange={e => setNewSignal({...newSignal, vendor_tag: e.target.value})}
+                    className="bg-slate-800 text-white rounded-lg p-2.5 border border-slate-700 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">No vendor tag</option>
+                    {vendors.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
+                    <option value="Acumatica">Acumatica</option>
+                    <option value="General Market">General Market</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-slate-400 text-xs mb-1.5 block">Confidence: {newSignal.confidence}%</label>
+                    <input type="range" min="0" max="100"
+                      value={newSignal.confidence}
+                      onChange={e => setNewSignal({...newSignal, confidence: parseInt(e.target.value)})}
+                      className="w-full accent-blue-500" />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs mb-1.5 block">Timeline</label>
+                    <select value={newSignal.timeline}
+                      onChange={e => setNewSignal({...newSignal, timeline: e.target.value})}
+                      className="w-full bg-slate-800 text-white rounded-lg p-2 border border-slate-700 text-sm focus:outline-none focus:border-blue-500">
+                      <option>Now</option><option>3 months</option><option>6 months</option><option>12 months</option><option>12-18 months</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs mb-1.5 block">Impact</label>
+                    <select value={newSignal.impact}
+                      onChange={e => setNewSignal({...newSignal, impact: e.target.value})}
+                      className="w-full bg-slate-800 text-white rounded-lg p-2 border border-slate-700 text-sm focus:outline-none focus:border-blue-500">
+                      <option>Low</option><option>Medium</option><option>High</option>
+                    </select>
+                  </div>
+                </div>
+                <textarea value={newSignal.notes}
+                  onChange={e => setNewSignal({...newSignal, notes: e.target.value})}
+                  placeholder="Why does this matter? What would validate it?"
+                  className="w-full bg-slate-800 text-white rounded-lg p-3 border border-slate-700 h-14 text-sm resize-none focus:outline-none focus:border-blue-500" />
+                <button onClick={addSignal}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-all">
+                  <Plus size={15} /> Log Signal
+                </button>
+              </div>
+            </div>
+
+            {/* Signal list — sorted by impact */}
+            <div className="space-y-3">
+              {filteredSignals.length === 0 && (
+                <div className="text-center py-12 text-slate-500">No signals yet — log one above!</div>
+              )}
+              {filteredSignals.map(signal => {
+                const impact = IMPACT_CONFIG[signal.impact] || IMPACT_CONFIG.Low;
+                const status = STATUS_CONFIG[signal.status] || STATUS_CONFIG.Monitoring;
+                return (
+                  <div key={signal.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-600 transition-all">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {signal.vendor_tag && (
+                            <span className="text-xs font-semibold bg-slate-800 text-slate-200 px-2 py-1 rounded-md">{signal.vendor_tag}</span>
+                          )}
+                          <span className={`text-xs font-medium px-2 py-1 rounded-md border ${impact.color}`}>
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full ${impact.dot} mr-1.5`} />
+                            {signal.impact} Impact
+                          </span>
+                          <span className={`text-xs font-medium px-2 py-1 rounded-md border ${status.color}`}>{signal.status}</span>
+                          <span className="text-xs text-slate-500">🎯 {signal.confidence}% confident</span>
+                          <span className="text-xs text-slate-500">⏱ {signal.timeline}</span>
+                        </div>
+                        <p className="text-white font-medium mb-1">{signal.observation}</p>
+                        {signal.notes && <p className="text-slate-400 text-sm italic">{signal.notes}</p>}
+                        {signal.source && <p className="text-slate-500 text-xs mt-1">📎 {signal.source}</p>}
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        {signal.status === 'Monitoring' && <>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Validated')}
+                            className="bg-green-600/20 hover:bg-green-600/40 text-green-400 border border-green-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">✓ Validate</button>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Invalidated')}
+                            className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs px-3 py-1.5 rounded-lg transition-all">✗ Dismiss</button>
+                        </>}
                         {signal.status !== 'Monitoring' && (
-                          <button onClick={() => updateSignalStatus(signal.id, 'Monitoring')} className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded">↩ Reopen</button>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Monitoring')}
+                            className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">↩ Reopen</button>
                         )}
-                        <button onClick={() => deleteSignal(signal.id)} className="text-red-400 hover:text-red-300 ml-1">
-                          <Trash2 size={16} />
+                        <button onClick={() => deleteSignal(signal.id)} className="text-slate-600 hover:text-red-400 transition-colors p-1.5">
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ===== EDITOR MODE =====
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Competitive Tracker - Editor</h1>
-              <p className="text-slate-300">Gather and manage competitive research</p>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={handleAiUpdate} disabled={aiUpdating} className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <RefreshCw size={18} className={aiUpdating ? 'animate-spin' : ''} />
-                {aiUpdating ? 'Updating...' : '🤖 AI Update'}
-              </button>
-              <button onClick={() => setMode('signals')} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Radio size={18} /> Signals
-              </button>
-              <button onClick={() => setMode('present')} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Eye size={18} /> Present
-              </button>
-              <button onClick={downloadAsJSON} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Download size={18} /> Export
-              </button>
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <div className="bg-slate-700 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Vendors</h2>
-              <div className="space-y-3">
-                {vendors.map((vendor) => (
+        {/* ══════════════════════════════
+            EDITOR TAB
+        ══════════════════════════════ */}
+        {tab === 'editor' && (
+          <div className="grid grid-cols-4 gap-6">
+            {/* Vendor list */}
+            <div className="col-span-1 space-y-2">
+              <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Vendors</h2>
+              {vendors.map(vendor => {
+                const m = MATURITY_CONFIG[vendor.ai_maturity] || MATURITY_CONFIG['Limited'];
+                return (
                   <button key={vendor.id} onClick={() => setSelectedVendorId(vendor.id)}
-                    className={`w-full text-left p-4 rounded-lg transition-all ${selectedVendorId === vendor.id ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-200 hover:bg-slate-500'}`}>
-                    <div className="font-semibold">{vendor.name}</div>
-                    <div className="text-sm opacity-75 mt-1">{vendor.capabilities.length} capabilities</div>
+                    className={`w-full text-left p-3 rounded-xl transition-all border ${
+                      selectedVendorId === vendor.id
+                        ? 'bg-blue-600/20 border-blue-500/50 text-white'
+                        : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-600'
+                    }`}>
+                    <div className="font-medium text-sm">{vendor.name}</div>
+                    <div className={`text-xs mt-1 ${m.text}`}>{vendor.ai_maturity || 'Unknown'}</div>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          </div>
 
-          {selectedVendor && (
-            <div className="lg:col-span-3">
-              <div className="bg-slate-700 rounded-lg p-8">
-                <h3 className="text-3xl font-bold text-white mb-6">{selectedVendor.name}</h3>
-                <div className="mb-6">
-                  <label className="block text-slate-300 font-semibold mb-2">Status</label>
-                  <select value={selectedVendor.status} onChange={(e) => updateVendor('status', e.target.value)}
-                    className="w-full bg-slate-600 text-white rounded-lg p-2 border border-slate-500">
-                    <option value="not_started">Not Started</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
+            {/* Vendor editor */}
+            {selectedVendor && (
+              <div className="col-span-3 bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-white">{selectedVendor.name}</h2>
+                  <select value={selectedVendor.ai_maturity || ''} onChange={e => updateVendor('ai_maturity', e.target.value)}
+                    className="bg-slate-800 text-white rounded-lg p-2 border border-slate-700 text-sm">
+                    <option value="">Select maturity</option>
+                    <option>Limited</option><option>Developing</option><option>Advanced</option><option>Ambitious</option>
                   </select>
                 </div>
-                <div className="mb-6">
-                  <h4 className="text-lg font-bold text-white mb-3">AI Capabilities</h4>
-                  <div className="space-y-2 mb-3">
-                    {selectedVendor.capabilities.map((cap) => (
-                      <div key={cap.id} className="flex justify-between items-center bg-slate-600 p-3 rounded">
-                        <span className="text-slate-100">{cap.capability}</span>
-                        <button onClick={() => removeCapability(cap.id)} className="text-red-400 hover:text-red-300"><Trash2 size={18} /></button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <input type="text" value={newCapability} onChange={(e) => setNewCapability(e.target.value)}
-                      placeholder="Add capability" className="flex-1 bg-slate-600 text-white rounded-lg p-2 border border-slate-500"
-                      onKeyPress={(e) => e.key === 'Enter' && addCapability()} />
-                    <button onClick={addCapability} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"><Plus size={18} /></button>
-                  </div>
-                </div>
-                <div className="mb-6">
-                  <label className="block text-slate-300 font-semibold mb-2">Implementation Claims</label>
-                  <textarea value={selectedVendor.implementation_claims || ''} onChange={(e) => updateVendor('implementation_claims', e.target.value)}
-                    className="w-full bg-slate-600 text-white rounded-lg p-3 border border-slate-500 h-20" />
-                </div>
-                <div className="mb-6">
-                  <h4 className="text-lg font-bold text-white mb-3">Sources</h4>
-                  <div className="space-y-2 mb-3">
-                    {selectedVendor.sources.map((src) => (
-                      <div key={src.id} className="flex justify-between items-center bg-slate-600 p-3 rounded">
-                        <span className="text-slate-100 text-sm">{src.source}</span>
-                        <button onClick={() => removeSource(src.id)} className="text-red-400 hover:text-red-300"><Trash2 size={18} /></button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <input type="text" value={newSource} onChange={(e) => setNewSource(e.target.value)}
-                      placeholder="Add source" className="flex-1 bg-slate-600 text-white rounded-lg p-2 border border-slate-500"
-                      onKeyPress={(e) => e.key === 'Enter' && addSource()} />
-                    <button onClick={addSource} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"><Plus size={18} /></button>
-                  </div>
-                </div>
+
+                {/* Capabilities */}
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-2">Strategic Notes</label>
-                  <textarea value={selectedVendor.notes || ''} onChange={(e) => updateVendor('notes', e.target.value)}
-                    className="w-full bg-slate-600 text-white rounded-lg p-3 border border-slate-500 h-24" />
+                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">AI Capabilities</h3>
+                  <div className="space-y-2 mb-3">
+                    {selectedVendor.capabilities.map(cap => (
+                      <div key={cap.id} className="flex justify-between items-center bg-slate-800 p-3 rounded-lg">
+                        <span className="text-slate-200 text-sm">{cap.capability}</span>
+                        <button onClick={() => removeCapability(cap.id)} className="text-slate-500 hover:text-red-400 transition-colors"><Trash2 size={15} /></button>
+                      </div>
+                    ))}
+                    {selectedVendor.capabilities.length === 0 && (
+                      <p className="text-slate-500 text-sm italic">No capabilities yet — run AI Update or add manually</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="text" value={newCapability} onChange={e => setNewCapability(e.target.value)}
+                      placeholder="Add capability..." onKeyPress={e => e.key === 'Enter' && addCapability()}
+                      className="flex-1 bg-slate-800 text-white rounded-lg p-2.5 border border-slate-700 text-sm focus:outline-none focus:border-blue-500" />
+                    <button onClick={addCapability} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all"><Plus size={15} /></button>
+                  </div>
+                </div>
+
+                {/* Implementation claims */}
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Implementation Claims</h3>
+                  <textarea value={selectedVendor.implementation_claims || ''} onChange={e => updateVendor('implementation_claims', e.target.value)}
+                    className="w-full bg-slate-800 text-white rounded-lg p-3 border border-slate-700 h-20 text-sm resize-none focus:outline-none focus:border-blue-500" />
+                </div>
+
+                {/* Sources */}
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Sources</h3>
+                  <div className="space-y-2 mb-3">
+                    {selectedVendor.sources.map(src => (
+                      <div key={src.id} className="flex justify-between items-center bg-slate-800 p-3 rounded-lg">
+                        <span className="text-slate-200 text-sm">{src.source}</span>
+                        <button onClick={() => removeSource(src.id)} className="text-slate-500 hover:text-red-400 transition-colors"><Trash2 size={15} /></button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="text" value={newSource} onChange={e => setNewSource(e.target.value)}
+                      placeholder="Add source URL or title..." onKeyPress={e => e.key === 'Enter' && addSource()}
+                      className="flex-1 bg-slate-800 text-white rounded-lg p-2.5 border border-slate-700 text-sm focus:outline-none focus:border-blue-500" />
+                    <button onClick={addSource} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all"><Plus size={15} /></button>
+                  </div>
+                </div>
+
+                {/* Strategic notes */}
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Strategic Notes</h3>
+                  <textarea value={selectedVendor.notes || ''} onChange={e => updateVendor('notes', e.target.value)}
+                    className="w-full bg-slate-800 text-white rounded-lg p-3 border border-slate-700 h-28 text-sm resize-none focus:outline-none focus:border-blue-500" />
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
