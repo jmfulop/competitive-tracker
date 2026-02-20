@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Eye, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap } from 'lucide-react';
+import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap, X, HelpCircle, BookOpen, BarChart2, Cpu } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 const MATURITY_CONFIG = {
@@ -33,6 +33,9 @@ export default function CompetitiveTracker() {
   const [newCapability, setNewCapability] = useState('');
   const [newSource, setNewSource] = useState('');
   const [signalFilter, setSignalFilter] = useState('All');
+  // ── NEW: separate impact filter so High Impact card works properly
+  const [impactFilter, setImpactFilter] = useState('All');
+  const [showHelp, setShowHelp] = useState(false);
   const [newSignal, setNewSignal] = useState({
     observation: '', source: '', vendor_tag: '', confidence: 50,
     timeline: '6 months', impact: 'Medium', notes: '', status: 'Monitoring'
@@ -125,13 +128,32 @@ export default function CompetitiveTracker() {
     a.href = url; a.download = `erp-tracker-${new Date().toISOString().split('T')[0]}.json`; a.click();
   };
 
+  // ── Helper to navigate to signals tab with both filters set
+  const goToSignals = (statusFilter = 'All', impactF = 'All') => {
+    setTab('signals');
+    setSignalFilter(statusFilter);
+    setImpactFilter(impactF);
+  };
+
+  // ── Clear all active filters
+  const clearFilters = () => {
+    setSignalFilter('All');
+    setImpactFilter('All');
+  };
+
+  const hasActiveFilter = signalFilter !== 'All' || impactFilter !== 'All';
+
   const sortedSignals = [...signals].sort((a, b) => {
     const pa = IMPACT_CONFIG[a.impact]?.priority || 3;
     const pb = IMPACT_CONFIG[b.impact]?.priority || 3;
     return pa - pb;
   });
 
-  const filteredSignals = signalFilter === 'All' ? sortedSignals : sortedSignals.filter(s => s.status === signalFilter);
+  // ── Apply both status AND impact filters
+  const filteredSignals = sortedSignals
+    .filter(s => signalFilter === 'All' || s.status === signalFilter)
+    .filter(s => impactFilter === 'All' || s.impact === impactFilter);
+
   const validatedSignals = signals.filter(s => s.status === 'Validated');
   const highImpactSignals = signals.filter(s => s.impact === 'High');
   const topVendors = [...vendors].sort((a, b) => (MATURITY_CONFIG[b.ai_maturity]?.score || 0) - (MATURITY_CONFIG[a.ai_maturity]?.score || 0));
@@ -172,6 +194,9 @@ export default function CompetitiveTracker() {
             </nav>
           </div>
           <div className="flex gap-3">
+            <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+              <HelpCircle size={15} /> Help
+            </button>
             <button onClick={downloadAsJSON} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
               <Download size={15} /> Export
             </button>
@@ -184,6 +209,75 @@ export default function CompetitiveTracker() {
         </div>
       </header>
 
+      {/* ── HELP MODAL ── */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowHelp(false)}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-6 border-b border-slate-800 sticky top-0 bg-slate-900 rounded-t-2xl">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2"><HelpCircle size={20} className="text-blue-400" /> How to use this tracker</h2>
+              <button onClick={() => setShowHelp(false)} className="text-slate-500 hover:text-white transition-colors"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-6">
+
+              {/* What is this */}
+              <div>
+                <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2"><BarChart2 size={16} /> What is this tracker?</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  This is a competitive intelligence tool built for MYOB's Acumatica team. It tracks how major ERP vendors (NetSuite, SAP, Microsoft Dynamics, Oracle) are positioning their AI capabilities — and helps you spot early market trends before they become obvious. Use it to inform roadmap decisions, prepare executive briefings, and stay ahead of competitor moves.
+                </p>
+              </div>
+
+              {/* Tabs */}
+              <div>
+                <h3 className="text-blue-400 font-semibold mb-3 flex items-center gap-2"><BookOpen size={16} /> The three tabs</h3>
+                <div className="space-y-3">
+                  {[
+                    { tab: 'Dashboard', color: 'text-blue-300', desc: 'Your high-level view. Shows KPI cards (click them to filter Signals), vendor AI maturity rankings, and strategic opportunities vs threats. Start here for a quick read of the competitive landscape.' },
+                    { tab: 'Signals', color: 'text-purple-300', desc: 'Your weak signals journal. Log observations from customer calls, release notes, analyst reports, or anything that hints at where the market is heading. Rate confidence and impact, then validate or dismiss over time.' },
+                    { tab: 'Editor', color: 'text-slate-300', desc: 'Manage vendor data manually. Update AI maturity ratings, add/remove capabilities, log sources, and write strategic notes per vendor. Use this after researching a competitor.' },
+                  ].map(({ tab, color, desc }) => (
+                    <div key={tab} className="bg-slate-800 rounded-xl p-4">
+                      <div className={`font-semibold text-sm ${color} mb-1`}>{tab}</div>
+                      <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Weak signals */}
+              <div>
+                <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2"><Radio size={16} /> What is a weak signal?</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  A weak signal is an early, subtle indicator that something significant might be happening in the market — before it becomes obvious. Think of it as a rumble before the earthquake. Examples:
+                </p>
+                <ul className="space-y-1.5">
+                  {[
+                    'A customer asks if you support a feature a competitor just announced',
+                    'A vendor quietly updates their pricing page',
+                    'An analyst mentions a trend in passing on a webinar',
+                    'A partner starts recommending a competitor more often',
+                  ].map((ex, i) => (
+                    <li key={i} className="text-slate-400 text-sm flex items-start gap-2">
+                      <span className="text-purple-400 mt-0.5">→</span>{ex}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-slate-400 text-sm mt-3 leading-relaxed">Log these as Monitoring, then mark them Validated if they prove true, or Invalidated if they don't. Over time this builds your foresight muscle.</p>
+              </div>
+
+              {/* AI Update */}
+              <div>
+                <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2"><Cpu size={16} /> AI Update button</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  The AI Update button calls Claude via the Anthropic API to automatically research and refresh vendor capabilities based on the latest publicly available information. It updates each vendor's capability list and notes. Run it periodically (e.g. after a competitor release) to keep the data fresh without manual research. It does <strong className="text-white">not</strong> overwrite your manually added strategic notes or sources.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto px-6 py-8">
 
         {/* ══════════════════════════════
@@ -195,16 +289,52 @@ export default function CompetitiveTracker() {
             {/* KPI row */}
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: 'Vendors Tracked', value: vendors.length, icon: <Shield size={20} />, color: 'text-blue-400' },
-                { label: 'Active Signals', value: signals.filter(s => s.status === 'Monitoring').length, icon: <Radio size={20} />, color: 'text-purple-400' },
-                { label: 'Validated Signals', value: validatedSignals.length, icon: <TrendingUp size={20} />, color: 'text-green-400' },
-                { label: 'High Impact Threats', value: highImpactSignals.length, icon: <AlertTriangle size={20} />, color: 'text-red-400' },
-              ].map(({ label, value, icon, color }) => (
-                <div key={label} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                  <div className={`${color} mb-3`}>{icon}</div>
+                {
+                  label: 'Vendors Tracked',
+                  value: vendors.length,
+                  icon: <Shield size={20} />,
+                  color: 'text-blue-400',
+                  border: 'hover:border-blue-500/50',
+                  hint: 'View vendor grid ↓',
+                  action: () => document.getElementById('vendor-grid')?.scrollIntoView({ behavior: 'smooth' })
+                },
+                {
+                  label: 'Active Signals',
+                  value: signals.filter(s => s.status === 'Monitoring').length,
+                  icon: <Radio size={20} />,
+                  color: 'text-purple-400',
+                  border: 'hover:border-purple-500/50',
+                  hint: 'View monitoring signals →',
+                  action: () => goToSignals('Monitoring', 'All')
+                },
+                {
+                  label: 'Validated Signals',
+                  value: validatedSignals.length,
+                  icon: <TrendingUp size={20} />,
+                  color: 'text-green-400',
+                  border: 'hover:border-green-500/50',
+                  hint: 'View validated signals →',
+                  action: () => goToSignals('Validated', 'All')
+                },
+                {
+                  label: 'High Impact Threats',
+                  value: highImpactSignals.length,
+                  icon: <AlertTriangle size={20} />,
+                  color: 'text-red-400',
+                  border: 'hover:border-red-500/50',
+                  hint: 'View high impact signals →',
+                  // ── This now correctly filters by impact=High, not just status
+                  action: () => goToSignals('All', 'High')
+                },
+              ].map(({ label, value, icon, color, border, hint, action }) => (
+                <button key={label} onClick={action}
+                  className={`bg-slate-900 border border-slate-800 ${border} rounded-xl p-5 text-left transition-all cursor-pointer hover:scale-105 active:scale-100 group`}>
+                  <div className={`${color} mb-3 transition-transform group-hover:scale-110`}>{icon}</div>
                   <div className="text-3xl font-bold text-white mb-1">{value}</div>
-                  <div className="text-sm text-slate-400">{label}</div>
-                </div>
+                  <div className="text-sm text-slate-400 group-hover:text-slate-300">{label}</div>
+                  {/* Hint appears on hover so users know cards are clickable */}
+                  <div className="text-xs text-slate-600 group-hover:text-slate-500 mt-1.5 transition-colors">{hint}</div>
+                </button>
               ))}
             </div>
 
@@ -226,7 +356,7 @@ export default function CompetitiveTracker() {
             )}
 
             {/* Vendor cards */}
-            <div>
+            <div id="vendor-grid">
               <h2 className="text-xl font-bold text-white mb-4">Vendor AI Maturity</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {topVendors.map(vendor => {
@@ -239,11 +369,9 @@ export default function CompetitiveTracker() {
                           {vendor.ai_maturity || 'Unknown'}
                         </span>
                       </div>
-                      {/* Maturity bar */}
                       <div className="w-full bg-slate-800 rounded-full h-1.5 mb-4">
                         <div className={`${m.color} h-1.5 rounded-full ${m.bar}`} />
                       </div>
-                      {/* Top 3 capabilities */}
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         {vendor.capabilities.slice(0, 3).map((cap, i) => (
                           <span key={i} className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-md">{cap.capability}</span>
@@ -292,7 +420,18 @@ export default function CompetitiveTracker() {
         {tab === 'signals' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Weak Signal Journal</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-white">Weak Signal Journal</h2>
+                {/* ── Active filter badge with clear button */}
+                {hasActiveFilter && (
+                  <button onClick={clearFilters}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-blue-600/20 border border-blue-500/40 text-blue-300 rounded-full text-xs font-medium hover:bg-blue-600/30 transition-all">
+                    {impactFilter !== 'All' ? `${impactFilter} Impact` : ''}{impactFilter !== 'All' && signalFilter !== 'All' ? ' · ' : ''}{signalFilter !== 'All' ? signalFilter : ''}
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+              {/* Status filter pills */}
               <div className="flex gap-2">
                 {['All', 'Monitoring', 'Validated', 'Invalidated'].map(f => (
                   <button key={f} onClick={() => setSignalFilter(f)}
@@ -301,6 +440,25 @@ export default function CompetitiveTracker() {
                     }`}>{f}</button>
                 ))}
               </div>
+            </div>
+
+            {/* ── Impact filter pills (only visible when impact filter is available) */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Impact:</span>
+              {['All', 'High', 'Medium', 'Low'].map(f => (
+                <button key={f} onClick={() => setImpactFilter(f)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    impactFilter === f
+                      ? f === 'High' ? 'bg-red-600/40 text-red-300 border border-red-500/50'
+                        : f === 'Medium' ? 'bg-yellow-600/40 text-yellow-300 border border-yellow-500/50'
+                        : f === 'Low' ? 'bg-slate-600 text-slate-300'
+                        : 'bg-blue-600 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}>{f}</button>
+              ))}
+              <span className="text-xs text-slate-600 ml-1">
+                {filteredSignals.length} signal{filteredSignals.length !== 1 ? 's' : ''}
+              </span>
             </div>
 
             {/* Log new signal */}
@@ -361,10 +519,15 @@ export default function CompetitiveTracker() {
               </div>
             </div>
 
-            {/* Signal list — sorted by impact */}
+            {/* Signal list */}
             <div className="space-y-3">
               {filteredSignals.length === 0 && (
-                <div className="text-center py-12 text-slate-500">No signals yet — log one above!</div>
+                <div className="text-center py-12 text-slate-500">
+                  No signals match the current filter.{' '}
+                  {hasActiveFilter && (
+                    <button onClick={clearFilters} className="text-blue-400 hover:text-blue-300 underline ml-1">Clear filters</button>
+                  )}
+                </div>
               )}
               {filteredSignals.map(signal => {
                 const impact = IMPACT_CONFIG[signal.impact] || IMPACT_CONFIG.Low;
@@ -417,7 +580,6 @@ export default function CompetitiveTracker() {
         ══════════════════════════════ */}
         {tab === 'editor' && (
           <div className="grid grid-cols-4 gap-6">
-            {/* Vendor list */}
             <div className="col-span-1 space-y-2">
               <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Vendors</h2>
               {vendors.map(vendor => {
@@ -436,7 +598,6 @@ export default function CompetitiveTracker() {
               })}
             </div>
 
-            {/* Vendor editor */}
             {selectedVendor && (
               <div className="col-span-3 bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
                 <div className="flex justify-between items-center">
@@ -448,7 +609,6 @@ export default function CompetitiveTracker() {
                   </select>
                 </div>
 
-                {/* Capabilities */}
                 <div>
                   <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">AI Capabilities</h3>
                   <div className="space-y-2 mb-3">
@@ -470,14 +630,12 @@ export default function CompetitiveTracker() {
                   </div>
                 </div>
 
-                {/* Implementation claims */}
                 <div>
                   <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Implementation Claims</h3>
                   <textarea value={selectedVendor.implementation_claims || ''} onChange={e => updateVendor('implementation_claims', e.target.value)}
                     className="w-full bg-slate-800 text-white rounded-lg p-3 border border-slate-700 h-20 text-sm resize-none focus:outline-none focus:border-blue-500" />
                 </div>
 
-                {/* Sources */}
                 <div>
                   <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Sources</h3>
                   <div className="space-y-2 mb-3">
@@ -496,7 +654,6 @@ export default function CompetitiveTracker() {
                   </div>
                 </div>
 
-                {/* Strategic notes */}
                 <div>
                   <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Strategic Notes</h3>
                   <textarea value={selectedVendor.notes || ''} onChange={e => updateVendor('notes', e.target.value)}
