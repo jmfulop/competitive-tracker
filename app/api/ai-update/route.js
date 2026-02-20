@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
 
-const VENDOR_NAMES = ['NetSuite', 'SAP S/4HANA Cloud', 'Microsoft Dynamics 365', 'Oracle Cloud ERP'];
+const VENDOR_NAMES = ['NetSuite', 'SAP S/4HANA Cloud', 'Microsoft Dynamics 365', 'Oracle Cloud ERP', 'SAP Business One', 'SYSPRO', 'Epicor Kinetic', 'QAD Adaptive ERP', 'Unit4 ERP', 'Odoo', 'Striven', 'Campfire'];
 
 export async function POST() {
   const supabase = createClient(
