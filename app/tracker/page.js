@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Download } from 'lucide-react';
+import { Plus, Trash2, Download, Eye, Edit2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function Tracker() {
+export default function DualModeTracker() {
+  const [mode, setMode] = useState('present');
   const [vendors, setVendors] = useState([]);
   const [selectedVendorId, setSelectedVendorId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -117,6 +118,21 @@ export default function Tracker() {
     }
   };
 
+  const downloadAsJSON = () => {
+    const exportData = {
+      generatedBy: 'Jean Fulop',
+      generatedAt: new Date().toISOString(),
+      vendors: vendors
+    };
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `erp-competitive-analysis-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
@@ -125,11 +141,170 @@ export default function Tracker() {
     );
   }
 
+  // ===== PRESENTATION MODE =====
+  if (mode === 'present') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-12">
+            <button
+              onClick={() => setMode('edit')}
+              className="mb-6 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Edit2 size={18} /> Back to Editor
+            </button>
+            <h1 className="text-5xl font-bold text-white mb-2">ERP Competitive AI Analysis</h1>
+            <p className="text-slate-300 text-lg">Market positioning and strategic implications</p>
+            <p className="text-slate-400 text-sm mt-2">By Jean Fulop | {new Date().toLocaleDateString()}</p>
+          </div>
+
+          {/* Executive Summary */}
+          <div className="bg-blue-900 rounded-lg p-8 mb-12 border-l-4 border-blue-400">
+            <h2 className="text-2xl font-bold text-white mb-4">Executive Summary</h2>
+            <ul className="text-slate-200 space-y-3">
+              <li>✓ <strong>Microsoft leads</strong> in practical AI deployment with mature Copilot features</li>
+              <li>✓ <strong>SAP is most ambitious</strong> on agentic roadmap but still immature</li>
+              <li>✓ <strong>NetSuite focuses</strong> on intelligent automation (rules-based, not agentic)</li>
+              <li>✓ <strong>Oracle is behind</strong> on agentic features; strong analytics focus</li>
+            </ul>
+          </div>
+
+          {/* Competitive Matrix */}
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-white mb-6">Competitive Matrix</h2>
+            <div className="overflow-x-auto bg-slate-700 rounded-lg">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-600 border-b border-slate-500">
+                    <th className="px-6 py-4 text-left text-white font-semibold">Vendor</th>
+                    <th className="px-6 py-4 text-left text-white font-semibold">AI Maturity</th>
+                    <th className="px-6 py-4 text-left text-white font-semibold">Key Features</th>
+                    <th className="px-6 py-4 text-left text-white font-semibold">Implementation Impact</th>
+                    <th className="px-6 py-4 text-left text-white font-semibold">Strategic Position</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vendors.map((vendor) => (
+                    <tr key={vendor.id} className="border-b border-slate-600 hover:bg-slate-600">
+                      <td className="px-6 py-4 text-white font-semibold">{vendor.name}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          vendor.name === 'Microsoft Dynamics 365' ? 'bg-green-600 text-white' :
+                          vendor.name === 'SAP S/4HANA Cloud' ? 'bg-blue-600 text-white' :
+                          'bg-yellow-600 text-white'
+                        }`}>
+                          {vendor.name === 'Microsoft Dynamics 365' ? 'Advanced' : vendor.name === 'SAP S/4HANA Cloud' ? 'Ambitious' : 'Limited'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-200">
+                        {vendor.capabilities.slice(0, 2).join(', ')}...
+                      </td>
+                      <td className="px-6 py-4 text-slate-200 text-sm">{vendor.implementation_claims || 'N/A'}</td>
+                      <td className="px-6 py-4 text-slate-200 text-sm">{vendor.notes ? vendor.notes.substring(0, 50) : 'N/A'}...</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Detailed Vendor Profiles */}
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-white mb-6">Vendor Profiles</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {vendors.map((vendor) => (
+                <div key={vendor.id} className="bg-slate-700 rounded-lg p-6 border-l-4 border-blue-500">
+                  <h3 className="text-2xl font-bold text-white mb-4">{vendor.name}</h3>
+                  
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-2">AI Capabilities</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {vendor.capabilities.map((cap, idx) => (
+                        <span key={idx} className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full">
+                          {cap.capability}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-2">Implementation Claims</h4>
+                    <p className="text-slate-200">{vendor.implementation_claims || 'N/A'}</p>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-2">Strategic Assessment</h4>
+                    <p className="text-slate-200 text-sm">{vendor.notes || 'N/A'}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-300 mb-2">Sources</h4>
+                    <ul className="text-slate-200 text-sm space-y-1">
+                      {vendor.sources.map((src, idx) => (
+                        <li key={idx}>• {src.source}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Key Takeaways */}
+          <div className="bg-slate-700 rounded-lg p-8 mb-12">
+            <h2 className="text-2xl font-bold text-white mb-6">Strategic Implications for Acumatica</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-bold text-green-400 mb-3">🎯 Opportunities</h3>
+                <ul className="text-slate-200 space-y-2">
+                  <li>• Faster agentic adoption could differentiate vs. enterprise vendors</li>
+                  <li>• Mid-market focus = less competition on agentic features</li>
+                  <li>• Simpler deployment = competitive advantage in speed-to-value</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-red-400 mb-3">⚠️ Threats</h3>
+                <ul className="text-slate-200 space-y-2">
+                  <li>• Competitors moving faster on agentic capabilities</li>
+                  <li>• Microsoft's Copilot ecosystem is difficult to compete with</li>
+                  <li>• Customer expectations rising rapidly on AI features</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== EDITOR MODE =====
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-2">Competitive Tracker</h1>
-        <p className="text-slate-300 mb-8">Gather and manage competitive research</p>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Competitive Tracker - Editor</h1>
+              <p className="text-slate-300">Gather and manage competitive research</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setMode('present')}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Eye size={18} /> View Presentation
+              </button>
+              <button
+                onClick={downloadAsJSON}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Download size={18} /> Export
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Vendor List */}
@@ -148,7 +323,7 @@ export default function Tracker() {
                     }`}
                   >
                     <div className="font-semibold">{vendor.name}</div>
-                    <div className="text-sm opacity-75">{vendor.capabilities.length} capabilities</div>
+                    <div className="text-sm opacity-75 mt-1">{vendor.capabilities.length} capabilities</div>
                   </button>
                 ))}
               </div>
@@ -255,7 +430,7 @@ export default function Tracker() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-2">Notes</label>
+                  <label className="block text-slate-300 font-semibold mb-2">Strategic Notes</label>
                   <textarea
                     value={selectedVendor.notes || ''}
                     onChange={(e) => updateVendor('notes', e.target.value)}
