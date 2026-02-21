@@ -2,7 +2,26 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
 
-const VENDOR_NAMES = ['NetSuite', 'SAP S/4HANA Cloud', 'Microsoft Dynamics 365', 'Oracle Cloud ERP', 'SAP Business One', 'SYSPRO', 'Epicor Kinetic', 'QAD Adaptive ERP', 'Unit4 ERP', 'Odoo', 'Striven', 'Campfire', 'WIISE'];
+const VENDOR_NAMES = [
+  'Oracle NetSuite',
+  'SAP S/4HANA Cloud',
+  'Microsoft Dynamics 365 Business Central',
+  'Microsoft Dynamics 365 Finance',
+  'Oracle Fusion Cloud ERP',
+  'SAP Business One',
+  'SYSPRO',
+  'Epicor',
+  'QAD Adaptive ERP',
+  'Unit4',
+  'Odoo',
+  'Striven',
+  'Campfire',
+  'WIISE',
+  'Workday',
+  'Sage Intacct',
+  'Infor',
+  'IFS',
+];
 
 export async function POST() {
   const supabase = createClient(
@@ -19,33 +38,37 @@ export async function POST() {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-       model: 'claude-sonnet-4-6',
-        max_tokens: 8000,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 16000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: `Search for the latest AI capabilities and news (last 30 days) for these 12 ERP vendors.
+          content: `Search for the latest AI capabilities and news (last 30 days) for these 18 ERP vendors relevant to the ANZ mid-market.
 
 You MUST use these EXACT names in your response:
-- "NetSuite"
+- "Oracle NetSuite"
 - "SAP S/4HANA Cloud"
-- "Microsoft Dynamics 365"
-- "Oracle Cloud ERP"
+- "Microsoft Dynamics 365 Business Central"
+- "Microsoft Dynamics 365 Finance"
+- "Oracle Fusion Cloud ERP"
 - "SAP Business One"
 - "SYSPRO"
-- "Epicor Kinetic"
+- "Epicor"
 - "QAD Adaptive ERP"
-- "Unit4 ERP"
+- "Unit4"
 - "Odoo"
 - "Striven"
 - "Campfire"
 - "WIISE"
+- "Workday"
+- "Sage Intacct"
+- "Infor"
+- "IFS"
 
-
-Return ONLY a valid JSON array with no other text, no markdown, no code blocks. Include all 12 vendors:
+Return ONLY a valid JSON array with no other text, no markdown, no code blocks. Include all 18 vendors:
 [
   {
-    "name": "NetSuite",
+    "name": "Oracle NetSuite",
     "ai_maturity": "Advanced",
     "capabilities": ["capability 1", "capability 2", "capability 3"],
     "implementation_claims": "Brief description of their AI claims in 1-2 sentences",
@@ -56,7 +79,7 @@ Return ONLY a valid JSON array with no other text, no markdown, no code blocks. 
 
 ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"
 
-For smaller/newer vendors like Striven and Campfire where less info is available, use your best knowledge and set ai_maturity to "Limited" or "Developing" as appropriate.`
+For smaller or newer vendors like Striven, Campfire, and WIISE where less info is available, use your best knowledge and set ai_maturity to "Limited" or "Developing" as appropriate.`
         }],
       }),
     });
