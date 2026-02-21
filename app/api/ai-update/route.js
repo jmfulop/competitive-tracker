@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
 
-const VENDOR_NAMES = ['NetSuite', 'SAP S/4HANA Cloud', 'Microsoft Dynamics 365', 'Oracle Cloud ERP', 'SAP Business One', 'SYSPRO', 'Epicor Kinetic', 'QAD Adaptive ERP', 'Unit4 ERP', 'Odoo', 'Striven', 'Campfire'];
+const VENDOR_NAMES = ['NetSuite', 'SAP S/4HANA Cloud', 'Microsoft Dynamics 365', 'Oracle Cloud ERP', 'SAP Business One', 'SYSPRO', 'Epicor Kinetic', 'QAD Adaptive ERP', 'Unit4 ERP', 'Odoo', 'Striven', 'Campfire', 'WIISE'];
 
 export async function POST() {
   const supabase = createClient(
@@ -39,6 +39,8 @@ You MUST use these EXACT names in your response:
 - "Odoo"
 - "Striven"
 - "Campfire"
+- "WIISE"
+
 
 Return ONLY a valid JSON array with no other text, no markdown, no code blocks. Include all 12 vendors:
 [
