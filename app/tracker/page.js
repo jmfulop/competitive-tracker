@@ -361,9 +361,9 @@ export default function CompetitiveTracker() {
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { label: 'Acumatica Release Notes', url: 'https://help.acumatica.com' },
-                    { label: 'NetSuite AI Features', url: 'https://www.netsuite.com/portal/products/erp/artificial-intelligence.shtml' },
+                    { label: 'NetSuite AI Features', url: 'https://www.netsuite.com/portal/products/erp/artificial-intelligence.shtml?direct=true' },
                     { label: 'SAP Joule Updates', url: 'https://www.sap.com/products/artificial-intelligence/ai-assistant.html' },
-                    { label: 'Microsoft Copilot for Dynamics', url: 'https://www.microsoft.com/en-us/dynamics-365/copilot' },
+                    { label: 'Microsoft Copilot for Dynamics', url: 'https://www.microsoft.com/en-au/dynamics-365/copilot' },
                   ].map(({ label, url }) => (
                     <a key={label} href={url} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-2 ${t.row} hover:opacity-80 ${t.textSub} text-xs px-3 py-2 rounded-lg transition-all`}>
