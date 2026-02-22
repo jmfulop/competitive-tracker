@@ -447,13 +447,13 @@ export default function CompetitiveTracker() {
             </div>
 
             {validatedSignals.length > 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-                <h2 className="text-green-600 font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> Validated Signals — Last 30 Days</h2>
+              <div className={`${dark ? 'bg-green-950/40 border-green-800/50' : 'bg-green-50 border-green-200'} border rounded-xl p-6`}>
+                <h2 className="text-green-500 font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> Validated Signals — Last 30 Days</h2>
                 <ul className="space-y-2">
                   {validatedSignals.map(s => (
-                    <li key={s.id} className="text-gray-700 text-sm flex items-start gap-2">
+                    <li key={s.id} className={`${t.textSub} text-sm flex items-start gap-2`}>
                       <span className="text-green-500 mt-0.5">✓</span>
-                      <span>{s.vendor_tag && <strong className="text-gray-900">[{s.vendor_tag}]</strong>} {s.observation}</span>
+                      <span>{s.vendor_tag && <strong className={t.text}>[{s.vendor_tag}]</strong>} {s.observation}</span>
                     </li>
                   ))}
                 </ul>
