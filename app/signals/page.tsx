@@ -60,7 +60,7 @@ export default function SignalsPage() {
   const [digest, setDigest]       = useState<Record<string, unknown> | null>(null);
   const [genDigest, setGenDigest] = useState(false);
   const [vendors, setVendors]     = useState<string[]>([]);
-  const [scanVendor, setScanVendor] = useState('Oracle NetSuite');
+  const [scanVendor, setScanVendor] = useState('all');
   const [scanResult, setScanResult] = useState<{ inserted: number; skipped: number } | null>(null);
 
   const load = async () => {
@@ -82,7 +82,7 @@ export default function SignalsPage() {
         .eq('is_active', true);
       const unique = [...new Set((data ?? []).map(r => r.vendor_name))].sort();
       setVendors(unique);
-      if (unique.length) setScanVendor(unique[0]);
+      setScanVendor('all');
     };
     loadVendors();
   }, []);
@@ -95,9 +95,9 @@ export default function SignalsPage() {
     setScanResult(null);
     try {
       const res = await fetch('/api/signals/detect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vendor: scanVendor }),
+        method: scanVendor === 'all' ? 'GET' : 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-cron-secret': '' },
+        ...(scanVendor !== 'all' && { body: JSON.stringify({ vendor: scanVendor }) }),
       });
       const data = await res.json();
       setScanResult({ inserted: data.inserted ?? 0, skipped: data.skipped ?? 0 });
@@ -151,6 +151,7 @@ export default function SignalsPage() {
             onChange={e => setScanVendor(e.target.value)}
             className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-indigo-500"
           >
+            <option value="all">All Vendors</option>
             {vendors.map(v => <option key={v} value={v}>{v}</option>)}
           </select>
           <button onClick={handleScan} disabled={scanning}
