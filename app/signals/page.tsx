@@ -52,13 +52,16 @@ const SOURCE_LABEL: Record<string, string> = {
 export default function SignalsPage() {
   const supabase = createClient();
 
-  const [signals, setSignals]   = useState<Signal[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [scanning, setScanning] = useState(false);
-  const [filter, setFilter]     = useState('all');
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const [digest, setDigest]     = useState<Record<string, unknown> | null>(null);
+  const [signals, setSignals]     = useState<Signal[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [scanning, setScanning]   = useState(false);
+  const [filter, setFilter]       = useState('all');
+  const [expanded, setExpanded]   = useState<Set<number>>(new Set());
+  const [digest, setDigest]       = useState<Record<string, unknown> | null>(null);
   const [genDigest, setGenDigest] = useState(false);
+  const [vendors, setVendors]     = useState<string[]>([]);
+  const [scanVendor, setScanVendor] = useState('Oracle NetSuite');
+  const [scanResult, setScanResult] = useState<{ inserted: number; skipped: number } | null>(null);
 
   const load = async () => {
     const { data } = await supabase
@@ -70,15 +73,34 @@ export default function SignalsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const loadVendors = async () => {
+      const { data } = await supabase
+        .from('scan_sources')
+        .select('vendor_name')
+        .eq('is_active', true);
+      const unique = [...new Set((data ?? []).map(r => r.vendor_name))].sort();
+      setVendors(unique);
+      if (unique.length) setScanVendor(unique[0]);
+    };
+    loadVendors();
+  }, []);
 
   const toggle = (id: number) =>
     setExpanded(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const handleScan = async () => {
     setScanning(true);
+    setScanResult(null);
     try {
-      await fetch('/api/signals/detect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vendor: 'Oracle NetSuite' }) });
+      const res = await fetch('/api/signals/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor: scanVendor }),
+      });
+      const data = await res.json();
+      setScanResult({ inserted: data.inserted ?? 0, skipped: data.skipped ?? 0 });
       await load();
     } finally {
       setScanning(false);
@@ -118,12 +140,19 @@ export default function SignalsPage() {
           <h1 className="text-2xl font-bold">Signals</h1>
           <p className="text-gray-400 text-sm mt-0.5">AI-detected competitive signals — sources no one else is watching</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button onClick={handleDigest} disabled={genDigest}
             className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 rounded-lg text-sm transition-colors">
             <Zap size={13} className={genDigest ? 'animate-pulse text-indigo-400' : ''} />
             {genDigest ? 'Generating…' : 'Weekly Digest'}
           </button>
+          <select
+            value={scanVendor}
+            onChange={e => setScanVendor(e.target.value)}
+            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-indigo-500"
+          >
+            {vendors.map(v => <option key={v} value={v}>{v}</option>)}
+          </select>
           <button onClick={handleScan} disabled={scanning}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-lg text-sm transition-colors">
             <RefreshCw size={13} className={scanning ? 'animate-spin' : ''} />
@@ -131,6 +160,16 @@ export default function SignalsPage() {
           </button>
         </div>
       </div>
+
+      {scanResult && (
+        <div className="mb-4 flex items-center gap-3 bg-green-950/40 border border-green-800 rounded-lg px-4 py-3 text-sm">
+          <span className="text-green-400 font-medium">Scan complete —</span>
+          <span className="text-gray-300">{scanResult.inserted} new signals detected</span>
+          <span className="text-gray-600">·</span>
+          <span className="text-gray-500">{scanResult.skipped} duplicates skipped</span>
+          <button onClick={() => setScanResult(null)} className="ml-auto text-gray-600 hover:text-gray-400">✕</button>
+        </div>
+      )}
 
       <div className="grid grid-cols-4 gap-4 mb-6">
         {stats.map(s => (
