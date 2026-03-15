@@ -4,7 +4,8 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Download, Zap, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Download, Zap, X, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 
 type SupportLevel = 'full' | 'partial' | 'roadmap' | 'none';
 
@@ -68,6 +69,7 @@ function BattlecardSection({ title, items, color, icon }: {
 
 export default function ComparePage() {
   const supabase = createClient();
+  const router   = useRouter();
 
   const [allVendors, setAllVendors] = useState<string[]>([]);
   const [selected, setSelected]     = useState<string[]>(['MYOB Acumatica']);
@@ -265,9 +267,15 @@ export default function ComparePage() {
             style={{ gridTemplateColumns: `22% repeat(${selected.length}, 1fr)` }}>
             <div className="p-4 text-xs uppercase tracking-wider text-gray-500 font-semibold">Feature</div>
             {selected.map(v => (
-              <div key={v} className={`p-4 text-sm font-semibold text-center
+              <div key={v} className={`p-3 flex flex-col items-center gap-1.5
                 ${v === 'MYOB Acumatica' ? 'text-purple-300' : 'text-gray-200'}`}>
-                {v}
+                <span className="text-sm font-semibold text-center">{v}</span>
+                <button
+                  onClick={() => router.push(`/research/${encodeURIComponent(v)}`)}
+                  className="flex items-center gap-1 px-2 py-0.5 bg-gray-800 hover:bg-indigo-700 border border-gray-700 hover:border-indigo-500 rounded text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  <ExternalLink size={9} /> Research
+                </button>
               </div>
             ))}
           </div>
