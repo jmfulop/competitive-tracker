@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Radio, GitCompare, CreditCard,
-  TrendingUp, Activity, Sun, Moon, Download, HelpCircle,
+  TrendingUp, Activity, Sun, Moon, Download,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -19,7 +19,6 @@ const PRIMARY_NAV = [
 
 const SECONDARY_NAV = [
   { href: '/activity', label: 'Activity', icon: <Activity size={14} /> },
-  { href: '/help',     label: 'Help',     icon: <HelpCircle size={14} /> },
 ];
 
 export default function Nav() {
