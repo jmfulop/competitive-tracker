@@ -26,10 +26,15 @@ interface Battlecard {
 }
 
 const BADGE: Record<SupportLevel, { label: string; cls: string }> = {
-  full:    { label: '✓ Full',    cls: 'bg-green-900/60 text-green-300 border border-green-700'   },
+  full:    { label: '✓ Full',    cls: 'bg-green-900/60 text-green-300 border border-green-700'    },
   partial: { label: '~ Partial', cls: 'bg-yellow-900/60 text-yellow-300 border border-yellow-700' },
-  roadmap: { label: '◷ Roadmap', cls: 'bg-blue-900/60 text-blue-300 border border-blue-700'     },
-  none:    { label: '✗ None',    cls: 'bg-gray-800 text-gray-500 border border-gray-700'         },
+  roadmap: { label: '◷ Roadmap', cls: 'bg-blue-900/60 text-blue-300 border border-blue-700'      },
+  none:    { label: '✗ None',    cls: 'bg-gray-800 text-gray-500 border border-gray-700'          },
+};
+
+const COLOR_MAP: Record<string, string> = {
+  green: 'text-green-400', red: 'text-red-400', blue: 'text-blue-400',
+  orange: 'text-orange-400', purple: 'text-purple-400', yellow: 'text-yellow-400',
 };
 
 function SupportBadge({ level, notes }: { level: SupportLevel; notes?: string }) {
@@ -42,18 +47,17 @@ function SupportBadge({ level, notes }: { level: SupportLevel; notes?: string })
   );
 }
 
-const COLOR_MAP: Record<string, string> = {
-  green: 'text-green-400', red: 'text-red-400', blue: 'text-blue-400',
-  orange: 'text-orange-400', purple: 'text-purple-400', yellow: 'text-yellow-400',
-};
-
-function BattlecardSection({ title, items, color, icon }: { title: string; items: string[]; color: string; icon: string }) {
+function BattlecardSection({ title, items, color, icon }: {
+  title: string; items: string[]; color: string; icon: string;
+}) {
   return (
     <div className="bg-gray-800/50 rounded-lg p-4">
       <h3 className={`text-sm font-semibold mb-3 ${COLOR_MAP[color] ?? 'text-gray-300'}`}>{title}</h3>
       <ul className="space-y-2">
         {items?.map((item, i) => (
-          <li key={i} className="flex gap-2 text-sm text-gray-300"><span className="shrink-0">{icon}</span>{item}</li>
+          <li key={i} className="flex gap-2 text-sm text-gray-300">
+            <span className="shrink-0">{icon}</span>{item}
+          </li>
         ))}
       </ul>
     </div>
@@ -71,6 +75,7 @@ export default function ComparePage() {
   const [bcLoading, setBcLoading]   = useState(false);
   const [bcError, setBcError]       = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
+  const [showVendors, setShowVendors] = useState(false);
 
   useEffect(() => {
     const loadVendors = async () => {
@@ -152,10 +157,12 @@ export default function ComparePage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6 max-w-7xl mx-auto">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Feature Comparison</h1>
-          <p className="text-gray-400 text-sm mt-1">ANZ Mid-Market ERP — select 2–4 vendors</p>
+          <p className="text-gray-400 text-sm mt-1">ANZ Mid-Market ERP — select up to 4 vendors</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={exportCSV}
@@ -170,40 +177,100 @@ export default function ComparePage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
-        {allVendors.slice(0, 8).map(v => {
-          const active = selected.includes(v);
-          const isMYOB = v === 'MYOB Acumatica';
-          return (
-            <button key={v} onClick={() => toggleVendor(v)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border transition-all
-                ${isMYOB ? 'bg-purple-700 border-purple-500 text-white cursor-default'
-                  : active ? 'bg-indigo-700 border-indigo-500 text-white'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'}`}>
-              {v}{active && !isMYOB && <X size={11} />}
-            </button>
-          );
-        })}
-        <span className="text-xs text-gray-600 self-center">{selected.length}/4 selected</span>
+      {/* Selected vendors + picker */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-gray-400 font-medium">
+            Selected vendors <span className="text-gray-600">({selected.length}/4)</span>
+          </span>
+          <button
+            onClick={() => setShowVendors(!showVendors)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs text-gray-300 transition-colors"
+          >
+            {showVendors ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            {showVendors ? 'Hide vendor list' : 'Change vendors'}
+          </button>
+        </div>
+
+        {/* Currently selected */}
+        <div className="flex flex-wrap gap-2">
+          {selected.map(v => {
+            const isMYOB = v === 'MYOB Acumatica';
+            return (
+              <span key={v}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border
+                  ${isMYOB
+                    ? 'bg-purple-700 border-purple-500 text-white'
+                    : 'bg-indigo-700 border-indigo-500 text-white'
+                  }`}>
+                {v}
+                {!isMYOB && (
+                  <button onClick={() => toggleVendor(v)} className="hover:text-red-300 transition-colors">
+                    <X size={11} />
+                  </button>
+                )}
+              </span>
+            );
+          })}
+          {selected.length < 4 && (
+            <span className="text-xs text-gray-600 self-center">
+              + {4 - selected.length} more available
+            </span>
+          )}
+        </div>
+
+        {/* Expanded vendor picker */}
+        {showVendors && (
+          <div className="mt-4 pt-4 border-t border-gray-800">
+            <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider">All vendors — click to add/remove</p>
+            <div className="flex flex-wrap gap-2">
+              {allVendors.filter(v => v !== 'MYOB Acumatica').map(v => {
+                const active = selected.includes(v);
+                const atMax  = selected.length >= 4 && !active;
+                return (
+                  <button key={v} onClick={() => toggleVendor(v)} disabled={atMax}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all
+                      ${active
+                        ? 'bg-indigo-700 border-indigo-500 text-white'
+                        : atMax
+                          ? 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'
+                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-indigo-500 hover:text-white'
+                      }`}>
+                    {v}
+                  </button>
+                );
+              })}
+            </div>
+            {selected.length >= 4 && (
+              <p className="text-xs text-yellow-600 mt-2">Maximum 4 vendors selected — remove one to add another</p>
+            )}
+          </div>
+        )}
       </div>
 
+      {/* Feature matrix */}
       {Object.keys(grouped).length === 0 && !loading ? (
         <div className="text-center py-24 text-gray-600">
           <p className="mb-2">No feature matrix data yet.</p>
-          <p className="text-sm">Run the seed script: <code className="text-indigo-400">npx ts-node scripts/seed-feature-matrix.ts</code></p>
+          <p className="text-sm">Run the seed SQL in Supabase to populate the matrix.</p>
         </div>
+      ) : loading ? (
+        <div className="text-center py-24 text-gray-600">Loading matrix…</div>
       ) : (
         <div className="rounded-xl overflow-hidden border border-gray-800">
+          {/* Column headers */}
           <div className="grid bg-gray-900 border-b border-gray-800"
-            style={{ gridTemplateColumns: `20% repeat(${selected.length}, 1fr)` }}>
+            style={{ gridTemplateColumns: `22% repeat(${selected.length}, 1fr)` }}>
             <div className="p-4 text-xs uppercase tracking-wider text-gray-500 font-semibold">Feature</div>
             {selected.map(v => (
-              <div key={v} className={`p-4 text-sm font-semibold text-center ${v === 'MYOB Acumatica' ? 'text-purple-300' : 'text-gray-200'}`}>
+              <div key={v} className={`p-4 text-sm font-semibold text-center
+                ${v === 'MYOB Acumatica' ? 'text-purple-300' : 'text-gray-200'}`}>
                 {v}
               </div>
             ))}
           </div>
 
+          {/* Category groups */}
           {Object.entries(grouped).map(([cat, rows]) => {
             const featureNames = [...new Set(rows.map(r => r.feature_name))];
             const isOpen = !collapsed[cat];
@@ -211,19 +278,27 @@ export default function ComparePage() {
               <div key={cat} className="border-b border-gray-800 last:border-0">
                 <button onClick={() => setCollapsed(p => ({ ...p, [cat]: !p[cat] }))}
                   className="w-full flex items-center gap-2 p-3 bg-gray-900/60 hover:bg-gray-900 text-left transition-colors">
-                  {isOpen ? <ChevronDown size={13} className="text-gray-500" /> : <ChevronRight size={13} className="text-gray-500" />}
+                  {isOpen
+                    ? <ChevronDown size={13} className="text-gray-500" />
+                    : <ChevronRight size={13} className="text-gray-500" />}
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">{cat}</span>
+                  <span className="text-xs text-gray-600 ml-1">({featureNames.length})</span>
                 </button>
                 {isOpen && featureNames.map((fname, fi) => (
                   <div key={fname}
-                    className={`grid items-start hover:bg-gray-900/40 transition-colors ${fi % 2 === 0 ? 'bg-gray-950' : 'bg-gray-900/20'}`}
-                    style={{ gridTemplateColumns: `20% repeat(${selected.length}, 1fr)` }}>
+                    className={`grid items-start hover:bg-gray-900/40 transition-colors
+                      ${fi % 2 === 0 ? 'bg-gray-950' : 'bg-gray-900/20'}`}
+                    style={{ gridTemplateColumns: `22% repeat(${selected.length}, 1fr)` }}>
                     <div className="p-3 text-sm text-gray-300 self-center">{fname}</div>
                     {selected.map(v => {
                       const match = rows.find(r => r.vendor_name === v && r.feature_name === fname);
                       return (
-                        <div key={v} className={`p-3 flex justify-center ${v === 'MYOB Acumatica' ? 'bg-purple-950/10' : ''}`}>
-                          <SupportBadge level={(match?.support_level ?? 'none') as SupportLevel} notes={match?.notes} />
+                        <div key={v} className={`p-3 flex justify-center
+                          ${v === 'MYOB Acumatica' ? 'bg-purple-950/10' : ''}`}>
+                          <SupportBadge
+                            level={(match?.support_level ?? 'none') as SupportLevel}
+                            notes={match?.notes}
+                          />
                         </div>
                       );
                     })}
@@ -235,16 +310,19 @@ export default function ComparePage() {
         </div>
       )}
 
+      {/* Legend */}
       <div className="flex flex-wrap gap-3 mt-4 text-xs text-gray-500">
         {Object.entries(BADGE).map(([k, v]) => (
           <span key={k} className={`px-2 py-0.5 rounded ${v.cls}`}>{v.label}</span>
         ))}
       </div>
 
+      {/* Battlecard error */}
       {bcError && (
         <div className="mt-6 bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300 text-sm">{bcError}</div>
       )}
 
+      {/* Battlecard panel */}
       {battlecard && (
         <div className="mt-8 bg-gray-900 rounded-xl p-6 border border-indigo-800">
           <div className="flex items-start justify-between mb-4">
