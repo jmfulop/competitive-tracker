@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/activity-log';
 
+export const maxDuration = 60;
+
 const client = new Anthropic();
 
 export async function POST(req: Request) {

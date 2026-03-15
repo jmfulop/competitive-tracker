@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/activity-log';
 
+export const maxDuration = 60;
+
 const client = new Anthropic();
 
 type SourceType =
@@ -41,6 +43,14 @@ interface DetectedSignal {
   roadmap_detail: string;
   is_leading_indicator: boolean;
   leading_indicator_horizon_months: number | null;
+}
+
+// Strip citation markup from AI responses
+function cleanText(text: string): string {
+  return text
+    .replace(/<cite[^>]*>|<\/cite>/g, '')  // remove <cite> tags
+    .replace(/\s{2,}/g, ' ')               // collapse double spaces
+    .trim();
 }
 
 async function isDuplicate(
@@ -145,20 +155,20 @@ Each item:
           .from('weak_signals')
           .insert({
             vendor_tag:                       vendor,
-            observation:                      sig.observation,
+            observation:                      cleanText(sig.observation),
             source:                           sig.source,
             confidence:                       sig.confidence,
             status:                           'new',
             spotted_at:                       new Date().toISOString(),
-            title:                            sig.title,
+            title:                            cleanText(sig.title),
             source_url:                       sig.source_url,
             source_type:                      sig.source_type,
             signal_type:                      sig.signal_type,
             urgency:                          sig.urgency,
             recommended_action:               sig.recommended_action,
-            action_detail:                    sig.action_detail,
+            action_detail:                    cleanText(sig.action_detail),
             roadmap_implication:              sig.roadmap_implication,
-            roadmap_detail:                   sig.roadmap_detail,
+            roadmap_detail:                   cleanText(sig.roadmap_detail),
             is_leading_indicator:             sig.is_leading_indicator,
             leading_indicator_horizon_months: sig.leading_indicator_horizon_months,
             detected_by:                      'ai_auto',
