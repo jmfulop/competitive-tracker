@@ -7,6 +7,14 @@ export const maxDuration = 60;
 
 const client = new Anthropic();
 
+function clean(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/<cite[^>]*>|<\/cite>/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 export async function POST(req: Request) {
   const { vendor, forceRefresh = false } = await req.json();
   if (!vendor) return NextResponse.json({ error: 'vendor required' }, { status: 400 });
@@ -90,6 +98,13 @@ ${existingContext}`
     return NextResponse.json({ error: 'Parse failed', raw: rawText }, { status: 500 });
   }
 
+  // Clean citation tags from all text fields
+  const cleanDimensions = Object.fromEntries(
+    Object.entries((parsed.dimension_scores as Record<string, { score: number; rationale: string }>) ?? {}).map(
+      ([k, v]) => [k, { score: v.score, rationale: clean(v.rationale) }]
+    )
+  );
+
   const now = new Date().toISOString();
 
   if (vendorRow?.id) {
@@ -97,8 +112,8 @@ ${existingContext}`
       .from('vendors')
       .update({
         overall_score:      parsed.overall_score,
-        dimension_scores:   parsed.dimension_scores,
-        score_summary:      parsed.summary,
+        dimension_scores:   cleanDimensions,
+        score_summary:      clean(parsed.summary as string),
         score_sources:      parsed.sources,
         last_researched_at: now,
         updated_at:         now,
@@ -112,8 +127,8 @@ ${existingContext}`
       vendor_id:        vendorRow?.id ?? null,
       vendor_name:      vendor,
       overall_score:    parsed.overall_score,
-      dimension_scores: parsed.dimension_scores,
-      summary:          parsed.summary,
+      dimension_scores: cleanDimensions,
+      summary:          clean(parsed.summary as string),
       sources:          parsed.sources,
       raw_research:     JSON.stringify(parsed),
       scored_at:        now,
