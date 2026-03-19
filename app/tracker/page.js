@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap, X, HelpCircle, BookOpen, BarChart2, Cpu, CheckCircle, PenLine, Sun, Moon } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap, X, HelpCircle, BookOpen, BarChart2, Cpu, CheckCircle, PenLine, Sun, Moon, GitCompare, CreditCard, Activity } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-// ── Theme definitions
+// Theme definitions
 const DARK = {
   bg:        'bg-slate-950',
   nav:       'bg-slate-900/80 border-slate-800',
@@ -92,6 +93,15 @@ const COMPLEXITY_CONFIG = {
 
 const EMPTY_SIGNAL = { observation: '', source: '', vendor_tag: '', confidence: 50, timeline: '6 months', impact: 'Medium', notes: '', status: 'Monitoring' };
 
+// New module links to add to nav
+const NEW_MODULES = [
+  { href: '/signals',     label: 'AI Signals',   icon: <Radio size={14} />,      color: 'text-indigo-400' },
+  { href: '/compare',     label: 'Compare',      icon: <GitCompare size={14} />, color: 'text-indigo-400' },
+  { href: '/battlecards', label: 'Battlecards',  icon: <CreditCard size={14} />, color: 'text-indigo-400' },
+  { href: '/win-loss',    label: 'Win / Loss',   icon: <TrendingUp size={14} />, color: 'text-indigo-400' },
+  { href: '/activity',    label: 'Activity',     icon: <Activity size={14} />,   color: 'text-indigo-400' },
+];
+
 export default function CompetitiveTracker() {
   const [dark, setDark] = useState(true);
   const t = dark ? DARK : LIGHT;
@@ -116,8 +126,8 @@ export default function CompetitiveTracker() {
   useEffect(() => { fetchVendors(); fetchSignals(); }, []);
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
   }, [toast]);
 
   const showToast = (message, type = 'success') => setToast({ message, type });
@@ -151,7 +161,7 @@ export default function CompetitiveTracker() {
       setAiUpdating(true);
       const res = await fetch('/api/ai-update', { method: 'POST' });
       const result = await res.json();
-      if (result.success) { await fetchVendors(); setLastAiUpdate(new Date()); showToast(`✅ Updated ${result.vendorCount} vendors!`); }
+      if (result.success) { await fetchVendors(); setLastAiUpdate(new Date()); showToast(`Updated ${result.vendorCount} vendors!`); }
       else showToast('Update failed: ' + result.error, 'error');
     } catch (err) { showToast('Error: ' + err.message, 'error'); }
     finally { setAiUpdating(false); }
@@ -160,7 +170,7 @@ export default function CompetitiveTracker() {
   const addSignal = async () => {
     if (!newSignal.observation.trim()) return;
     await supabase.from('weak_signals').insert([newSignal]);
-    setNewSignal(EMPTY_SIGNAL); await fetchSignals(); showToast('✓ Signal logged successfully');
+    setNewSignal(EMPTY_SIGNAL); await fetchSignals(); showToast('Signal logged successfully');
   };
 
   const saveEditedSignal = async () => {
@@ -171,7 +181,7 @@ export default function CompetitiveTracker() {
       timeline: editingSignal.timeline, impact: editingSignal.impact,
       notes: editingSignal.notes, updated_at: new Date().toISOString(),
     }).eq('id', editingSignal.id);
-    setEditingSignal(null); await fetchSignals(); showToast('✓ Signal updated');
+    setEditingSignal(null); await fetchSignals(); showToast('Signal updated');
   };
 
   const updateSignalStatus = async (id, status) => {
@@ -240,14 +250,14 @@ export default function CompetitiveTracker() {
   return (
     <div className={`min-h-screen ${t.bg} ${t.text} transition-colors duration-200`}>
 
-      {/* ── TOAST */}
+      {/* TOAST */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl border text-sm font-medium ${toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
           <CheckCircle size={16} />{toast.message}
         </div>
       )}
 
-      {/* ── EDIT SIGNAL MODAL */}
+      {/* EDIT SIGNAL MODAL */}
       {editingSignal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setEditingSignal(null)}>
           <div className={`${t.modal} border rounded-2xl w-full max-w-xl`} onClick={e => e.stopPropagation()}>
@@ -297,7 +307,7 @@ export default function CompetitiveTracker() {
         </div>
       )}
 
-      {/* ── HELP MODAL */}
+      {/* HELP MODAL */}
       {showHelp && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowHelp(false)}>
           <div className={`${t.modal} border rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
@@ -330,7 +340,7 @@ export default function CompetitiveTracker() {
                 <div className="space-y-2">
                   {[
                     { field: 'Deployment Status', desc: 'Is the AI actually in production, or just announced? Production > Beta > Announced > Roadmap.' },
-                    { field: 'Pricing Model', desc: 'Included in licence, paid add-on, or consumption-based? Affects how it\'s sold and perceived.' },
+                    { field: 'Pricing Model', desc: "Included in licence, paid add-on, or consumption-based? Affects how it's sold and perceived." },
                     { field: 'Implementation Complexity', desc: 'How hard is it to turn on? High complexity reduces real threat even if capability looks strong.' },
                     { field: 'Acumatica Gap', desc: 'Do we have this, is it on the roadmap, or a genuine gap? Fill this in manually — requires internal judgment.' },
                     { field: 'Buyer Persona', desc: 'Who is asking for this in deals — CFO, IT Admin, or end user?' },
@@ -345,7 +355,7 @@ export default function CompetitiveTracker() {
               </div>
               <div>
                 <h3 className="text-blue-500 font-semibold mb-2 flex items-center gap-2"><Radio size={16} /> Logging weak signals</h3>
-                <p className={`${t.textSub} text-sm leading-relaxed mb-3`}>Signals are logged <strong className={t.text}>manually</strong> in the Signals tab. Log as <strong className={t.text}>Monitoring</strong>, mark <strong className={t.text}>Validated</strong> if it proves true, or <strong className={t.text}>Invalidated</strong> if it doesn't.</p>
+                <p className={`${t.textSub} text-sm leading-relaxed mb-3`}>Signals are logged <strong className={t.text}>manually</strong> in the Signals tab. Log as <strong className={t.text}>Monitoring</strong>, mark <strong className={t.text}>Validated</strong> if it proves true, or <strong className={t.text}>Invalidated</strong> if it does not.</p>
                 <ul className="space-y-1.5">
                   {['A customer asks about a feature a competitor just announced','A vendor quietly changes their pricing or packaging','A partner starts recommending a competitor more often','An analyst mentions a market shift in passing'].map((ex, i) => (
                     <li key={i} className={`${t.textSub} text-sm flex items-start gap-2`}><span className="text-purple-500 mt-0.5">→</span>{ex}</li>
@@ -371,52 +381,66 @@ export default function CompetitiveTracker() {
                     </a>
                   ))}
                 </div>
-                <p className={`${t.textFaint} text-xs mt-4 text-right`}>Last updated: February 2026 · Built by Jean Fulop</p>
+                <p className={`${t.textFaint} text-xs mt-4 text-right`}>Last updated: March 2026 · Built by Jean Fulop</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── TOP NAV */}
+      {/* TOP NAV */}
       <header className={`border-b ${t.nav} backdrop-blur sticky top-0 z-10`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-8">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-6">
             <div>
               <h1 className={`text-lg font-bold ${t.text}`}>ERP Competitive Tracker</h1>
               <p className={`text-xs ${t.textMuted}`}>by Jean Fulop · {new Date().toLocaleDateString('en-AU')}</p>
             </div>
+
+            {/* Original tabs */}
             <nav className="flex gap-1">
               {[
-                { key: 'dashboard', label: 'Dashboard', icon: <TrendingUp size={15} /> },
-                { key: 'signals',   label: `Signals (${signals.length})`, icon: <Radio size={15} /> },
-                { key: 'editor',    label: 'Editor', icon: <Edit2 size={15} /> },
+                { key: 'dashboard', label: 'Dashboard', icon: <TrendingUp size={14} /> },
+                { key: 'signals',   label: `Signals (${signals.length})`, icon: <Radio size={14} /> },
+                { key: 'editor',    label: 'Editor', icon: <Edit2 size={14} /> },
               ].map(({ key, label, icon }) => (
                 <button key={key} onClick={() => setTab(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? t.navActive : t.navBtn}`}>
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? t.navActive : t.navBtn}`}>
                   {icon}{label}
                 </button>
               ))}
             </nav>
+
+            {/* Divider */}
+            <div className={`h-5 w-px ${dark ? 'bg-slate-700' : 'bg-gray-300'}`} />
+
+            {/* New module links */}
+            <nav className="flex gap-1">
+              {NEW_MODULES.map(({ href, label, icon }) => (
+                <Link key={href} href={href}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}>
+                  {icon}{label}
+                </Link>
+              ))}
+            </nav>
           </div>
+
           <div className="flex gap-2 items-center">
-            {/* ── Light/Dark toggle */}
             <button onClick={() => setDark(d => !d)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${t.navBtn} transition-all`}
-              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
-              {dark ? <Sun size={15} /> : <Moon size={15} />}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${t.navBtn} transition-all`}>
+              {dark ? <Sun size={14} /> : <Moon size={14} />}
               {dark ? 'Light' : 'Dark'}
             </button>
             <button onClick={() => setShowHelp(true)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${t.navBtn} transition-all`}>
-              <HelpCircle size={15} /> Help
+              <HelpCircle size={14} /> Help
             </button>
             <button onClick={downloadAsJSON} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${t.navBtn} transition-all`}>
-              <Download size={15} /> Export
+              <Download size={14} /> Export
             </button>
             <div className="flex flex-col items-end">
               <button onClick={handleAiUpdate} disabled={aiUpdating}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-all">
-                <RefreshCw size={15} className={aiUpdating ? 'animate-spin' : ''} />
+                <RefreshCw size={14} className={aiUpdating ? 'animate-spin' : ''} />
                 {aiUpdating ? 'Updating...' : 'AI Update'}
               </button>
               {lastAiUpdate && <span className={`text-xs ${t.textMuted} mt-0.5`}>Updated {lastAiUpdate.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}</span>}
@@ -427,15 +451,15 @@ export default function CompetitiveTracker() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
 
-        {/* ══ DASHBOARD ══ */}
+        {/* DASHBOARD */}
         {tab === 'dashboard' && (
           <div className="space-y-8">
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: 'Vendors Tracked', value: vendors.length, icon: <Shield size={20} />, color: 'text-blue-500', border: 'hover:border-blue-500/50', hint: 'View vendor grid ↓', action: () => document.getElementById('vendor-grid')?.scrollIntoView({ behavior: 'smooth' }) },
-                { label: 'Active Signals', value: signals.filter(s => s.status === 'Monitoring').length, icon: <Radio size={20} />, color: 'text-purple-500', border: 'hover:border-purple-500/50', hint: 'View monitoring signals →', action: () => goToSignals('Monitoring', 'All') },
-                { label: 'Validated Signals', value: validatedSignals.length, icon: <TrendingUp size={20} />, color: 'text-green-500', border: 'hover:border-green-500/50', hint: 'View validated signals →', action: () => goToSignals('Validated', 'All') },
-                { label: 'High Impact Threats', value: highImpactSignals.length, icon: <AlertTriangle size={20} />, color: 'text-red-500', border: 'hover:border-red-500/50', hint: 'View high impact signals →', action: () => goToSignals('All', 'High') },
+                { label: 'Vendors Tracked',    value: vendors.length,                                  icon: <Shield size={20} />,       color: 'text-blue-500',   border: 'hover:border-blue-500/50',   hint: 'View vendor grid ↓',           action: () => document.getElementById('vendor-grid')?.scrollIntoView({ behavior: 'smooth' }) },
+                { label: 'Active Signals',     value: signals.filter(s => s.status === 'Monitoring').length, icon: <Radio size={20} />, color: 'text-purple-500', border: 'hover:border-purple-500/50', hint: 'View monitoring signals →',     action: () => goToSignals('Monitoring', 'All') },
+                { label: 'Validated Signals',  value: validatedSignals.length,                         icon: <TrendingUp size={20} />,   color: 'text-green-500',  border: 'hover:border-green-500/50',  hint: 'View validated signals →',      action: () => goToSignals('Validated', 'All') },
+                { label: 'High Impact Threats',value: highImpactSignals.length,                         icon: <AlertTriangle size={20} />,color: 'text-red-500',    border: 'hover:border-red-500/50',    hint: 'View high impact signals →',    action: () => goToSignals('All', 'High') },
               ].map(({ label, value, icon, color, border, hint, action }) => (
                 <button key={label} onClick={action} className={`${t.card} border ${border} rounded-xl p-5 text-left transition-all cursor-pointer hover:scale-105 active:scale-100 group`}>
                   <div className={`${color} mb-3 transition-transform group-hover:scale-110`}>{icon}</div>
@@ -537,7 +561,7 @@ export default function CompetitiveTracker() {
           </div>
         )}
 
-        {/* ══ SIGNALS ══ */}
+        {/* SIGNALS TAB */}
         {tab === 'signals' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -574,7 +598,7 @@ export default function CompetitiveTracker() {
             </div>
 
             <div className={`${t.card} border rounded-xl overflow-hidden`}>
-              <button onClick={() => setShowSignalForm(v => !v)} className={`w-full flex items-center justify-between px-6 py-4 hover:opacity-80 transition-all`}>
+              <button onClick={() => setShowSignalForm(v => !v)} className="w-full flex items-center justify-between px-6 py-4 hover:opacity-80 transition-all">
                 <span className={`font-semibold ${t.text} flex items-center gap-2`}><Plus size={16} className="text-purple-500" /> Log New Signal</span>
                 <span className={`${t.textMuted} text-xs`}>{showSignalForm ? '▲ Collapse' : '▼ Expand'}</span>
               </button>
@@ -645,7 +669,7 @@ export default function CompetitiveTracker() {
                         </div>
                         <p className={`${t.text} font-medium mb-1`}>{signal.observation}</p>
                         {signal.notes && <p className={`${t.textSub} text-sm italic`}>{signal.notes}</p>}
-                        {signal.source && <p className={`${t.textMuted} text-xs mt-1`}>📎 {signal.source}</p>}
+                        {signal.source && <p className={`${t.textMuted} text-xs mt-1`}>🔎 {signal.source}</p>}
                       </div>
                       <div className="flex gap-2 shrink-0">
                         {signal.status === 'Monitoring' && <>
@@ -666,7 +690,7 @@ export default function CompetitiveTracker() {
           </div>
         )}
 
-        {/* ══ EDITOR ══ */}
+        {/* EDITOR TAB */}
         {tab === 'editor' && (
           <div className="grid grid-cols-4 gap-6">
             <div className="col-span-1 space-y-2">
