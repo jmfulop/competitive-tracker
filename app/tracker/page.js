@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap, X, HelpCircle, BookOpen, BarChart2, Cpu, CheckCircle, PenLine, Sun, Moon } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-// ÔöÇÔöÇ Theme definitions
+// ── Theme definitions
 const DARK = {
   bg:        'bg-slate-950',
   nav:       'bg-slate-900/80 border-slate-800',
@@ -151,7 +151,7 @@ export default function CompetitiveTracker() {
       setAiUpdating(true);
       const res = await fetch('/api/ai-update', { method: 'POST' });
       const result = await res.json();
-      if (result.success) { await fetchVendors(); setLastAiUpdate(new Date()); showToast(`Ô£à Updated ${result.vendorCount} vendors!`); }
+      if (result.success) { await fetchVendors(); setLastAiUpdate(new Date()); showToast(`✓à Updated ${result.vendorCount} vendors!`); }
       else showToast('Update failed: ' + result.error, 'error');
     } catch (err) { showToast('Error: ' + err.message, 'error'); }
     finally { setAiUpdating(false); }
@@ -160,7 +160,7 @@ export default function CompetitiveTracker() {
   const addSignal = async () => {
     if (!newSignal.observation.trim()) return;
     await supabase.from('weak_signals').insert([newSignal]);
-    setNewSignal(EMPTY_SIGNAL); await fetchSignals(); showToast('Ô£ô Signal logged successfully');
+    setNewSignal(EMPTY_SIGNAL); await fetchSignals(); showToast('✓ Signal logged successfully');
   };
 
   const saveEditedSignal = async () => {
@@ -171,7 +171,7 @@ export default function CompetitiveTracker() {
       timeline: editingSignal.timeline, impact: editingSignal.impact,
       notes: editingSignal.notes, updated_at: new Date().toISOString(),
     }).eq('id', editingSignal.id);
-    setEditingSignal(null); await fetchSignals(); showToast('Ô£ô Signal updated');
+    setEditingSignal(null); await fetchSignals(); showToast('✓ Signal updated');
   };
 
   const updateSignalStatus = async (id, status) => {
@@ -240,14 +240,14 @@ export default function CompetitiveTracker() {
   return (
     <div className={`min-h-screen ${t.bg} ${t.text} transition-colors duration-200`}>
 
-      {/* ÔöÇÔöÇ TOAST */}
+      {/* ── TOAST */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl border text-sm font-medium ${toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
           <CheckCircle size={16} />{toast.message}
         </div>
       )}
 
-      {/* ÔöÇÔöÇ EDIT SIGNAL MODAL */}
+      {/* ── EDIT SIGNAL MODAL */}
       {editingSignal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setEditingSignal(null)}>
           <div className={`${t.modal} border rounded-2xl w-full max-w-xl`} onClick={e => e.stopPropagation()}>
@@ -297,7 +297,7 @@ export default function CompetitiveTracker() {
         </div>
       )}
 
-      {/* ÔöÇÔöÇ HELP MODAL */}
+      {/* ── HELP MODAL */}
       {showHelp && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowHelp(false)}>
           <div className={`${t.modal} border rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
@@ -378,7 +378,7 @@ export default function CompetitiveTracker() {
         </div>
       )}
 
-      {/* ÔöÇÔöÇ TOP NAV */}
+      {/* ── TOP NAV */}
       <header className={`border-b ${t.nav} backdrop-blur sticky top-0 z-10`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-8">
@@ -406,7 +406,7 @@ export default function CompetitiveTracker() {
             </nav>
           </div>
           <div className="flex gap-2 items-center">
-            {/* ÔöÇÔöÇ Light/Dark toggle */}
+            {/* ── Light/Dark toggle */}
             <button onClick={() => setDark(d => !d)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${t.navBtn} transition-all`}
               title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
@@ -433,7 +433,7 @@ export default function CompetitiveTracker() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
 
-        {/* ÔòÉÔòÉ DASHBOARD ÔòÉÔòÉ */}
+        {/* ══ DASHBOARD ══ */}
         {tab === 'dashboard' && (
           <div className="space-y-8">
             <div className="grid grid-cols-4 gap-4">
@@ -458,7 +458,7 @@ export default function CompetitiveTracker() {
                 <ul className="space-y-2">
                   {validatedSignals.map(s => (
                     <li key={s.id} className={`${t.textSub} text-sm flex items-start gap-2`}>
-                      <span className="text-green-500 mt-0.5">Ô£ô</span>
+                      <span className="text-green-500 mt-0.5">✓</span>
                       <span>{s.vendor_tag && <strong className={t.text}>[{s.vendor_tag}]</strong>} {s.observation}</span>
                     </li>
                   ))}
@@ -543,7 +543,7 @@ export default function CompetitiveTracker() {
           </div>
         )}
 
-        {/* ÔòÉÔòÉ SIGNALS ÔòÉÔòÉ */}
+        {/* ══ SIGNALS ══ */}
         {tab === 'signals' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -582,7 +582,7 @@ export default function CompetitiveTracker() {
             <div className={`${t.card} border rounded-xl overflow-hidden`}>
               <button onClick={() => setShowSignalForm(v => !v)} className={`w-full flex items-center justify-between px-6 py-4 hover:opacity-80 transition-all`}>
                 <span className={`font-semibold ${t.text} flex items-center gap-2`}><Plus size={16} className="text-purple-500" /> Log New Signal</span>
-                <span className={`${t.textMuted} text-xs`}>{showSignalForm ? 'Ôû▓ Collapse' : 'Ôû╝ Expand'}</span>
+                <span className={`${t.textMuted} text-xs`}>{showSignalForm ? '▓ Collapse' : '╝ Expand'}</span>
               </button>
               {showSignalForm && (
                 <div className={`px-6 pb-6 space-y-3 border-t ${t.section} pt-4`}>
@@ -655,8 +655,8 @@ export default function CompetitiveTracker() {
                       </div>
                       <div className="flex gap-2 shrink-0">
                         {signal.status === 'Monitoring' && <>
-                          <button onClick={() => updateSignalStatus(signal.id, 'Validated')} className="bg-green-600/20 hover:bg-green-600/40 text-green-600 border border-green-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">Ô£ô Validate</button>
-                          <button onClick={() => updateSignalStatus(signal.id, 'Invalidated')} className={`${t.row} ${t.textSub} text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80`}>Ô£ù Dismiss</button>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Validated')} className="bg-green-600/20 hover:bg-green-600/40 text-green-600 border border-green-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">✓ Validate</button>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Invalidated')} className={`${t.row} ${t.textSub} text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80`}>✓ù Dismiss</button>
                         </>}
                         {signal.status !== 'Monitoring' && (
                           <button onClick={() => updateSignalStatus(signal.id, 'Monitoring')} className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-500 border border-blue-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">Ôå® Reopen</button>
@@ -672,7 +672,7 @@ export default function CompetitiveTracker() {
           </div>
         )}
 
-        {/* ÔòÉÔòÉ EDITOR ÔòÉÔòÉ */}
+        {/* ══ EDITOR ══ */}
         {tab === 'editor' && (
           <div className="grid grid-cols-4 gap-6">
             <div className="col-span-1 space-y-2">
