@@ -2,34 +2,26 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard, Radio, GitCompare, CreditCard,
-  TrendingUp, Activity, Sun, Moon, Download,
-} from 'lucide-react';
+import { Radio, Sun, Moon, Download, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-const PRIMARY_NAV = [
-  { href: '/',            label: 'Dashboard',   icon: <LayoutDashboard size={15} /> },
-  { href: '/signals',     label: 'Signals',     icon: <Radio size={15} />, badge: 'signals' },
-  { href: '/compare',     label: 'Compare',     icon: <GitCompare size={15} /> },
-  { href: '/battlecards', label: 'Battlecards', icon: <CreditCard size={15} /> },
-  { href: '/win-loss',    label: 'Win / Loss',  icon: <TrendingUp size={15} /> },
-];
-
-const SECONDARY_NAV = [
-  { href: '/activity', label: 'Activity', icon: <Activity size={14} /> },
+const NAV_ITEMS = [
+  { href: '/tracker',     label: 'Dashboard'   },
+  { href: '/signals',     label: 'AI Signals', badge: true },
+  { href: '/compare',     label: 'Compare'     },
+  { href: '/battlecards', label: 'Battlecards' },
+  { href: '/win-loss',    label: 'Win / Loss'  },
+  { href: '/activity',    label: 'Activity'    },
 ];
 
 export default function Nav() {
   const pathname = usePathname();
   const supabase = createClient();
 
-  const [dark, setDark]         = useState(true);
+  const [dark, setDark]               = useState(true);
   const [signalBadge, setSignalBadge] = useState(0);
-  const [userEmail, setUserEmail]     = useState<string | null>(null);
 
-  // Live badge — count of high urgency "respond" signals in last 7 days
   useEffect(() => {
     const load = async () => {
       const { count } = await supabase
@@ -40,108 +32,69 @@ export default function Nav() {
         .gte('spotted_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
       setSignalBadge(count ?? 0);
     };
-
     load();
-
-    const channel = supabase
-      .channel('nav_badge')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'weak_signals' }, load)
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Current user
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserEmail(data.user?.email ?? null);
-    });
-  }, []);
-
-  // Sync dark mode with document
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
   }, [dark]);
 
   const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href);
+    href === '/tracker'
+      ? pathname === '/tracker' || pathname === '/'
+      : pathname.startsWith(href);
 
-  const badgeCounts: Record<string, number> = { signals: signalBadge };
+  // Match tracker's slate theme
+  const navBtn    = 'text-slate-400 hover:text-white hover:bg-slate-800';
+  const navActive = 'bg-blue-600 text-white';
 
   return (
-    <nav className="sticky top-0 z-40 flex items-center justify-between
-      bg-gray-950/95 backdrop-blur border-b border-gray-800 px-4 h-14">
+    <header className="border-b bg-slate-900/80 border-slate-800 backdrop-blur sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
-      {/* Left — brand + primary nav */}
-      <div className="flex items-center gap-5">
-        <Link href="/" className="flex flex-col leading-tight shrink-0">
-          <span className="text-sm font-bold text-white">ERP Competitive Tracker</span>
-          <span className="text-xs text-gray-500">
-            {userEmail ? userEmail.split('@')[0] : 'Jean Fulop'} · {new Date().toLocaleDateString('en-AU')}
-          </span>
-        </Link>
+        {/* Left — brand + nav */}
+        <div className="flex items-center gap-8">
+          <div>
+            <h1 className="text-lg font-bold text-white">ERP Competitive Tracker</h1>
+            <p className="text-xs text-slate-500">
+              by Jean Fulop · {new Date().toLocaleDateString('en-AU')}
+            </p>
+          </div>
 
-        <div className="flex items-center gap-0.5">
-          {PRIMARY_NAV.map(item => {
-            const active     = isActive(item.href);
-            const badgeCount = item.badge ? (badgeCounts[item.badge] ?? 0) : 0;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                  ${active
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-                  }`}
-              >
-                {item.icon}
-                {item.label}
-                {badgeCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1
-                    bg-red-500 text-white text-[10px] font-bold rounded-full
-                    flex items-center justify-center">
-                    {badgeCount > 9 ? '9+' : badgeCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          <nav className="flex gap-1 flex-wrap">
+            {NAV_ITEMS.map(item => {
+              const active = isActive(item.href);
+              return (
+                <Link key={item.href} href={item.href}
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                    ${active ? navActive : navBtn}`}>
+                  {item.label}
+                  {item.badge && signalBadge > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1
+                      bg-red-500 text-white text-[10px] font-bold rounded-full
+                      flex items-center justify-center">
+                      {signalBadge > 9 ? '9+' : signalBadge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
+
+        {/* Right — tools */}
+        <div className="flex gap-2 items-center">
+          <button onClick={() => setDark(d => !d)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${navBtn} transition-all`}>
+            {dark ? <Sun size={15} /> : <Moon size={15} />}
+            {dark ? 'Light' : 'Dark'}
+          </button>
+          <button className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${navBtn} transition-all`}>
+            <Download size={15} /> Export
+          </button>
+        </div>
+
       </div>
-
-      {/* Right — secondary nav + tools */}
-      <div className="flex items-center gap-0.5">
-        {SECONDARY_NAV.map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors
-              ${isActive(item.href)
-                ? 'text-white bg-gray-800'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
-              }`}
-          >
-            {item.icon}
-            <span className="hidden sm:inline">{item.label}</span>
-          </Link>
-        ))}
-
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm
-          text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors">
-          <Download size={14} />
-          <span className="hidden sm:inline">Export</span>
-        </button>
-
-        <button
-          onClick={() => setDark(d => !d)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm
-            text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
-        >
-          {dark ? <Sun size={14} /> : <Moon size={14} />}
-          <span className="hidden sm:inline">{dark ? 'Light' : 'Dark'}</span>
-        </button>
-      </div>
-    </nav>
+    </header>
   );
 }
