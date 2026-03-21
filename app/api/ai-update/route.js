@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -23,6 +24,22 @@ const VENDOR_NAMES = [
   'IFS',
 ];
 
+async function logActivity(supabase, { vendor, action, summary, previous, current }) {
+  try {
+    await supabase.from('activity_log').insert({
+      entity_type: 'vendor_score',
+      vendor,
+      action:      'research_run',
+      summary,
+      previous:    previous ?? null,
+      current:     current ?? null,
+      meta:        { source: 'ai_update', model: 'claude-sonnet-4-6' },
+    });
+  } catch (err) {
+    console.error('[activity_log] Failed:', err);
+  }
+}
+
 export async function POST() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -33,12 +50,12 @@ export async function POST() {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'Content-Type':    'application/json',
+        'x-api-key':       process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model:      'claude-sonnet-4-6',
         max_tokens: 16000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
@@ -46,24 +63,7 @@ export async function POST() {
           content: `Search for the latest AI capabilities and news (last 30 days) for these 18 ERP vendors relevant to the ANZ mid-market.
 
 You MUST use these EXACT names in your response:
-- "Oracle NetSuite"
-- "SAP S/4HANA Cloud"
-- "Microsoft Dynamics 365 Business Central"
-- "Microsoft Dynamics 365 Finance"
-- "Oracle Fusion Cloud ERP"
-- "SAP Business One"
-- "SYSPRO"
-- "Epicor"
-- "QAD Adaptive ERP"
-- "Unit4"
-- "Odoo"
-- "Striven"
-- "Campfire"
-- "WIISE"
-- "Workday"
-- "Sage Intacct"
-- "Infor"
-- "IFS"
+${VENDOR_NAMES.map(n => `- "${n}"`).join('\n')}
 
 Return ONLY a valid JSON array with no other text, no markdown, no code blocks. Include all 18 vendors:
 [
@@ -79,7 +79,7 @@ Return ONLY a valid JSON array with no other text, no markdown, no code blocks. 
 
 ai_maturity must be one of: "Limited", "Developing", "Advanced", "Ambitious"
 
-For smaller or newer vendors like Striven, Campfire, and WIISE where less info is available, use your best knowledge and set ai_maturity to "Limited" or "Developing" as appropriate.`
+For smaller or newer vendors like Striven, Campfire, and WIISE where less info is available, use your best knowledge and set ai_maturity to "Limited" or "Developing" as appropriate.`,
         }],
       }),
     });
@@ -95,7 +95,7 @@ For smaller or newer vendors like Striven, Campfire, and WIISE where less info i
       .map(block => block.text)
       .join('');
 
-    const cleaned = text.replace(/```json|```/g, '').trim();
+    const cleaned   = text.replace(/```json|```/g, '').trim();
     const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
 
     if (!jsonMatch) {
@@ -103,25 +103,28 @@ For smaller or newer vendors like Striven, Campfire, and WIISE where less info i
     }
 
     const vendors = JSON.parse(jsonMatch[0]);
-
     const results = [];
+
     for (const vendor of vendors) {
       if (!VENDOR_NAMES.includes(vendor.name)) continue;
 
+      // Fetch existing data for diff
       const { data: existing } = await supabase
         .from('vendors')
-        .select('id')
+        .select('id, ai_maturity, implementation_claims, notes')
         .eq('name', vendor.name)
         .single();
+
+      const maturityChanged = existing && existing.ai_maturity !== vendor.ai_maturity;
 
       if (existing) {
         await supabase
           .from('vendors')
           .update({
-            ai_maturity: vendor.ai_maturity,
+            ai_maturity:           vendor.ai_maturity,
             implementation_claims: vendor.implementation_claims,
-            notes: vendor.notes,
-            updated_at: new Date().toISOString(),
+            notes:                 vendor.notes,
+            updated_at:            new Date().toISOString(),
           })
           .eq('id', existing.id);
 
@@ -139,15 +142,26 @@ For smaller or newer vendors like Striven, Campfire, and WIISE where less info i
           );
         }
 
-        results.push({ vendor: vendor.name, action: 'updated' });
+        // Log to activity_log
+        await logActivity(supabase, {
+          vendor:  vendor.name,
+          action:  'research_run',
+          summary: maturityChanged
+            ? `AI Update: ${vendor.name} — maturity changed ${existing.ai_maturity} → ${vendor.ai_maturity}`
+            : `AI Update: ${vendor.name} — ${vendor.capabilities?.length ?? 0} capabilities refreshed`,
+          previous: existing ? { ai_maturity: existing.ai_maturity } : null,
+          current:  { ai_maturity: vendor.ai_maturity, capabilities_count: vendor.capabilities?.length ?? 0 },
+        });
+
+        results.push({ vendor: vendor.name, action: 'updated', maturityChanged });
       } else {
         const { data: newVendor } = await supabase
           .from('vendors')
           .insert({
-            name: vendor.name,
-            ai_maturity: vendor.ai_maturity,
+            name:                  vendor.name,
+            ai_maturity:           vendor.ai_maturity,
             implementation_claims: vendor.implementation_claims,
-            notes: vendor.notes,
+            notes:                 vendor.notes,
           })
           .select()
           .single();
@@ -163,11 +177,28 @@ For smaller or newer vendors like Striven, Campfire, and WIISE where less info i
               vendor.sources.map(src => ({ vendor_id: newVendor.id, source: src }))
             );
           }
+
+          await logActivity(supabase, {
+            vendor:  vendor.name,
+            action:  'research_run',
+            summary: `AI Update: ${vendor.name} — new vendor added (${vendor.ai_maturity})`,
+            previous: null,
+            current:  { ai_maturity: vendor.ai_maturity },
+          });
         }
 
         results.push({ vendor: vendor.name, action: 'inserted' });
       }
     }
+
+    // Log overall run summary
+    const maturityChanges = results.filter(r => r.maturityChanged).map(r => r.vendor);
+    await logActivity(supabase, {
+      vendor:  'all',
+      action:  'research_run',
+      summary: `AI Update complete — ${results.length} vendors refreshed${maturityChanges.length ? `, ${maturityChanges.length} maturity changes: ${maturityChanges.join(', ')}` : ', no maturity changes'}`,
+      current: { updated: results.length, maturity_changes: maturityChanges },
+    });
 
     return Response.json({ success: true, results, vendorCount: results.length });
 
