@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap, X, HelpCircle, BookOpen, BarChart2, Cpu, CheckCircle, PenLine, Sun, Moon } from 'lucide-react';
+import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap, X, HelpCircle, BookOpen, BarChart2, Cpu, CheckCircle, PenLine, Sun, Moon, GitCompare, CreditCard, Activity, Trophy } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 // ── Theme definitions
@@ -398,11 +398,11 @@ export default function CompetitiveTracker() {
                 </button>
               ))}
               <div className="w-px bg-slate-700 mx-1 self-stretch" />
-              <a href="/signals" className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}>AI Signals</a>
-              <a href="/compare" className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}>Compare</a>
-              <a href="/battlecards" className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}>Battlecards</a>
-              <a href="/win-loss" className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}>Win / Loss</a>
-              <a href="/activity" className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}>Activity</a>
+              <a href="/signals" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}><Radio size={15} />AI Signals</a>
+              <a href="/compare" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}><GitCompare size={15} />Compare</a>
+              <a href="/battlecards" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}><CreditCard size={15} />Battlecards</a>
+              <a href="/win-loss" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}><Trophy size={15} />Win / Loss</a>
+              <a href="/activity" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${t.navBtn}`}><Activity size={15} />Activity</a>
             </nav>
           </div>
           <div className="flex gap-2 items-center">
