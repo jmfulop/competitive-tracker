@@ -66,8 +66,9 @@ export default function Nav() {
               const active = isActive(item.href);
               return (
                 <Link key={item.href} href={item.href}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
                     ${active ? navActive : navBtn}`}>
+                  {item.icon}
                   {item.label}
                   {item.badge && signalBadge > 0 && (
                     <span className="ml-1 inline-flex items-center justify-center
