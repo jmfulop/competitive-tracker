@@ -2,17 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Radio, Sun, Moon, Download, HelpCircle } from 'lucide-react';
+import { Radio, Sun, Moon, Download, TrendingUp, GitCompare, CreditCard, Activity, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const NAV_ITEMS = [
-  { href: '/tracker',     label: 'Dashboard'   },
-  { href: '/signals',     label: 'AI Signals', badge: true },
-  { href: '/compare',     label: 'Compare'     },
-  { href: '/battlecards', label: 'Battlecards' },
-  { href: '/win-loss',    label: 'Win / Loss'  },
-  { href: '/activity',    label: 'Activity'    },
+  { href: '/tracker',     label: 'Dashboard',   icon: <LayoutDashboard size={15} /> },
+  { href: '/signals',     label: 'AI Signals',  icon: <Radio size={15} />,      badge: true },
+  { href: '/compare',     label: 'Compare',     icon: <GitCompare size={15} />  },
+  { href: '/battlecards', label: 'Battlecards', icon: <CreditCard size={15} />  },
+  { href: '/win-loss',    label: 'Win / Loss',  icon: <TrendingUp size={15} />  },
+  { href: '/activity',    label: 'Activity',    icon: <Activity size={15} />    },
 ];
 
 export default function Nav() {
@@ -44,7 +44,6 @@ export default function Nav() {
       ? pathname === '/tracker' || pathname === '/'
       : pathname.startsWith(href);
 
-  // Match tracker's slate theme
   const navBtn    = 'text-slate-400 hover:text-white hover:bg-slate-800';
   const navActive = 'bg-blue-600 text-white';
 
@@ -52,7 +51,6 @@ export default function Nav() {
     <header className="border-b bg-slate-900/80 border-slate-800 backdrop-blur sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
-        {/* Left — brand + nav */}
         <div className="flex items-center gap-8">
           <div>
             <h1 className="text-lg font-bold text-white">ERP Competitive Tracker</h1>
@@ -71,9 +69,7 @@ export default function Nav() {
                   {item.icon}
                   {item.label}
                   {item.badge && signalBadge > 0 && (
-                    <span className="ml-1 inline-flex items-center justify-center
-                      min-w-[18px] h-[18px] px-1 bg-red-500 text-white 
-                      text-[10px] font-bold rounded-full">
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full">
                       {signalBadge > 9 ? '9+' : signalBadge}
                     </span>
                   )}
@@ -83,7 +79,6 @@ export default function Nav() {
           </nav>
         </div>
 
-        {/* Right — tools */}
         <div className="flex gap-2 items-center">
           <button onClick={() => setDark(d => !d)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${navBtn} transition-all`}>
