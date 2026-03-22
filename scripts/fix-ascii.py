@@ -1,13 +1,10 @@
-content = open('app/tracker/page.js', 'r', encoding='utf-8').read()
+lines = open('app/tracker/page.js', 'r', encoding='utf-8').readlines()
 
-# Fix -> in JSX spans (invalid JSX syntax)
-content = content.replace('>-></span>', '>{"->"}</span>')
+# Fix line 351 (index 350) specifically - the help modal signal examples
+for i, line in enumerate(lines):
+    if 'text-purple-500 mt-0.5">->' in line:
+        lines[i] = line.replace('>-></span>', '>\u2192</span>')
+        print(f'Fixed line {i+1}')
 
-# Fix standalone -> at end of text
-content = content.replace('intelligence ->', 'intelligence &rarr;')
-
-# Fix remaining arrow issues  
-content = content.replace("'->'", '"→"')
-
-open('app/tracker/page.js', 'w', encoding='utf-8').write(content)
+open('app/tracker/page.js', 'w', encoding='utf-8').writelines(lines)
 print('Done!')
