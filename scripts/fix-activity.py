@@ -1,0 +1,6 @@
+content = open('app/activity/page.tsx', 'r', encoding='utf-8').read()
+print("First 300 chars:")
+print(repr(content[:300]))
+print("\nTotal lines:", content.count('\n'))
+print("\nContains ActivityLogPage:", 'ActivityLogPage' in content)
+print("Contains ComparePage:", 'ComparePage' in content)
