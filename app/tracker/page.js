@@ -348,7 +348,7 @@ export default function CompetitiveTracker() {
                 <p className={`${t.textSub} text-sm leading-relaxed mb-3`}>Signals are logged <strong className={t.text}>manually</strong> in the Signals tab. Log as <strong className={t.text}>Monitoring</strong>, mark <strong className={t.text}>Validated</strong> if it proves true, or <strong className={t.text}>Invalidated</strong> if it doesn't.</p>
                 <ul className="space-y-1.5">
                   {['A customer asks about a feature a competitor just announced','A vendor quietly changes their pricing or packaging','A partner starts recommending a competitor more often','An analyst mentions a market shift in passing'].map((ex, i) => (
-                    <li key={i} className={`${t.textSub} text-sm flex items-start gap-2`}><span className="text-purple-500 mt-0.5">-></span>{ex}</li>
+                    <li key={i} className={`${t.textSub} text-sm flex items-start gap-2`}><span className="text-purple-500 mt-0.5">{"->"}</span>{ex}</li>
                   ))}
                 </ul>
               </div>
@@ -513,7 +513,7 @@ export default function CompetitiveTracker() {
                       </div>
                       {vendor.buyer_persona && <p className={`text-xs ${t.textSub} mb-1`}>👤 {vendor.buyer_persona}</p>}
                       {vendor.adoption_signal && <p className={`text-xs ${t.textMuted} italic line-clamp-2`}>📎 {vendor.adoption_signal}</p>}
-                      {!vendor.buyer_persona && !vendor.adoption_signal && <p className={`text-xs ${t.textMuted} italic`}>Click to add intelligence -></p>}
+                      {!vendor.buyer_persona && !vendor.adoption_signal && <p className={`text-xs ${t.textMuted} italic`}>Click to add intelligence &rarr;</p>}
                     </div>
                   );
                 })}
@@ -524,19 +524,19 @@ export default function CompetitiveTracker() {
               <div className={`${t.card} border rounded-xl p-6`}>
                 <h3 className="text-green-500 font-semibold mb-4 flex items-center gap-2"><Zap size={16} /> Opportunities</h3>
                 <ul className={`space-y-2 text-sm ${t.textSub}`}>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> Faster agentic adoption could differentiate vs enterprise vendors</li>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> Mid-market focus = less competition on agentic features</li>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> Simpler deployment = competitive advantage in speed-to-value</li>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> SAP's low Joule adoption is a direct positioning opportunity</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">{"->"}</span> Faster agentic adoption could differentiate vs enterprise vendors</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">{"->"}</span> Mid-market focus = less competition on agentic features</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">{"->"}</span> Simpler deployment = competitive advantage in speed-to-value</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">{"->"}</span> SAP's low Joule adoption is a direct positioning opportunity</li>
                 </ul>
               </div>
               <div className={`${t.card} border rounded-xl p-6`}>
                 <h3 className="text-red-500 font-semibold mb-4 flex items-center gap-2"><AlertTriangle size={16} /> Threats</h3>
                 <ul className={`space-y-2 text-sm ${t.textSub}`}>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Competitors moving faster on agentic capabilities</li>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Microsoft Copilot bundling makes AI appear free to M365 customers</li>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Customer expectations rising rapidly on AI features</li>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Odoo growing fast as low-cost alternative in lower mid-market</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">{"->"}</span> Competitors moving faster on agentic capabilities</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">{"->"}</span> Microsoft Copilot bundling makes AI appear free to M365 customers</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">{"->"}</span> Customer expectations rising rapidly on AI features</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">{"->"}</span> Odoo growing fast as low-cost alternative in lower mid-market</li>
                 </ul>
               </div>
             </div>
