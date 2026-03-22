@@ -7,7 +7,7 @@ import {
   Zap, BarChart2, CreditCard, Activity, TrendingUp,
 } from 'lucide-react';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+//  Types 
 
 interface LogEntry {
   id: string;
@@ -22,7 +22,7 @@ interface LogEntry {
   created_at: string;
 }
 
-// ── Config ────────────────────────────────────────────────────────────────────
+//  Config 
 
 const ACTION_META: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
   research_run:           { label: 'Research Run',        color: 'text-purple-300', bg: 'bg-purple-950/60 border-purple-800', icon: <BarChart2 size={12}/> },
@@ -36,7 +36,7 @@ const ACTION_META: Record<string, { label: string; color: string; bg: string; ic
 const ENTITY_FILTERS = ['all', 'vendor_score', 'battlecard', 'signal_triage', 'win_loss'];
 const PAGE_SIZE = 25;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+//  Helpers 
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -84,7 +84,7 @@ function JsonDiff({ previous, current }: { previous: Record<string, unknown> | n
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+//  Main Page 
 
 export default function ActivityLogPage() {
   const supabase = createClient();
@@ -128,7 +128,7 @@ export default function ActivityLogPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Live subscription — new log entries appear automatically
+  // Live subscription  new log entries appear automatically
   useEffect(() => {
     const channel = supabase
       .channel('activity_log_feed')
@@ -161,14 +161,14 @@ export default function ActivityLogPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Activity Log</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Every AI operation across the tracker — live feed</p>
+          <p className="text-gray-400 text-sm mt-0.5">Every AI operation across the tracker  live feed</p>
         </div>
         <button
           onClick={() => load(page, true)}
           className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors"
         >
           <RefreshCw size={13} className={refreshing ? 'animate-spin text-indigo-400' : ''}/>
-          {refreshing ? 'Refreshing…' : 'Refresh'}
+          {refreshing ? 'Refreshing' : 'Refresh'}
         </button>
       </div>
 
@@ -190,7 +190,7 @@ export default function ActivityLogPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search summaries…"
+            placeholder="Search summaries"
             className="bg-transparent text-sm text-gray-300 placeholder-gray-600 focus:outline-none w-full"
           />
         </div>
@@ -210,7 +210,7 @@ export default function ActivityLogPage() {
         <input
           value={vendorFilter}
           onChange={e => setVendorFilter(e.target.value)}
-          placeholder="Filter by vendor…"
+          placeholder="Filter by vendor"
           className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-indigo-600 w-44"
         />
       </div>
@@ -218,7 +218,7 @@ export default function ActivityLogPage() {
       {/* Feed */}
       {loading ? (
         <div className="flex items-center justify-center py-24 gap-3 text-gray-500">
-          <RefreshCw size={18} className="animate-spin"/> Loading…
+          <RefreshCw size={18} className="animate-spin"/> Loading
         </div>
       ) : entries.length === 0 ? (
         <div className="text-center py-24 text-gray-600">No activity found</div>
@@ -313,15 +313,15 @@ export default function ActivityLogPage() {
       {/* Pagination */}
       {total > PAGE_SIZE && (
         <div className="flex items-center justify-between mt-6 text-sm text-gray-400">
-          <span>Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} of {total}</span>
+          <span>Showing {page * PAGE_SIZE + 1}{Math.min((page + 1) * PAGE_SIZE, total)} of {total}</span>
           <div className="flex gap-2">
             <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
               className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 rounded-lg transition-colors">
-              ← Prev
+               Prev
             </button>
             <button onClick={() => setPage(p => p + 1)} disabled={(page + 1) * PAGE_SIZE >= total}
               className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 rounded-lg transition-colors">
-              Next →
+              Next 
             </button>
           </div>
         </div>
@@ -329,6 +329,3 @@ export default function ActivityLogPage() {
     </div>
   );
 }
-// force redeploy
-/ /   r e f r e s h  
- 
