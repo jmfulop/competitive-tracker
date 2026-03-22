@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Download, Edit2, RefreshCw, Radio, AlertTriangle, TrendingUp, Shield, Zap, X, HelpCircle, BookOpen, BarChart2, Cpu, CheckCircle, PenLine, Sun, Moon } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-// ÔöÇÔöÇ Theme definitions
+//  Theme definitions
 const DARK = {
   bg:        'bg-slate-950',
   nav:       'bg-slate-900/80 border-slate-800',
@@ -52,8 +52,8 @@ const LIGHT = {
 const MATURITY_CONFIG = {
   'Advanced':   { color: 'bg-green-500',  text: 'text-green-600',  bar: 'w-full',  score: 4, tooltip: 'Fully deployed AI at scale, proven in production across modules.' },
   'Ambitious':  { color: 'bg-blue-500',   text: 'text-blue-600',   bar: 'w-3/4',   score: 3, tooltip: 'Strong AI strategy, but real-world deployment is still catching up.' },
-  'Developing': { color: 'bg-yellow-500', text: 'text-yellow-600', bar: 'w-1/2',   score: 2, tooltip: 'Early stage AI ÔÇö limited features in production, roadmap in progress.' },
-  'Limited':    { color: 'bg-slate-500',  text: 'text-slate-600',  bar: 'w-1/4',   score: 1, tooltip: 'Minimal AI capability ÔÇö basic automation or early experimentation only.' },
+  'Developing': { color: 'bg-yellow-500', text: 'text-yellow-600', bar: 'w-1/2',   score: 2, tooltip: 'Early stage AI — limited features in production, roadmap in progress.' },
+  'Limited':    { color: 'bg-slate-500',  text: 'text-slate-600',  bar: 'w-1/4',   score: 1, tooltip: 'Minimal AI capability — basic automation or early experimentation only.' },
 };
 
 const IMPACT_CONFIG = {
@@ -151,7 +151,7 @@ export default function CompetitiveTracker() {
       setAiUpdating(true);
       const res = await fetch('/api/ai-update', { method: 'POST' });
       const result = await res.json();
-      if (result.success) { await fetchVendors(); setLastAiUpdate(new Date()); showToast(`Ô£à Updated ${result.vendorCount} vendors!`); }
+      if (result.success) { await fetchVendors(); setLastAiUpdate(new Date()); showToast(`✓ Updated ${result.vendorCount} vendors!`); }
       else showToast('Update failed: ' + result.error, 'error');
     } catch (err) { showToast('Error: ' + err.message, 'error'); }
     finally { setAiUpdating(false); }
@@ -160,7 +160,7 @@ export default function CompetitiveTracker() {
   const addSignal = async () => {
     if (!newSignal.observation.trim()) return;
     await supabase.from('weak_signals').insert([newSignal]);
-    setNewSignal(EMPTY_SIGNAL); await fetchSignals(); showToast('Ô£ô Signal logged successfully');
+    setNewSignal(EMPTY_SIGNAL); await fetchSignals(); showToast('checkmark Signal logged successfully');
   };
 
   const saveEditedSignal = async () => {
@@ -171,7 +171,7 @@ export default function CompetitiveTracker() {
       timeline: editingSignal.timeline, impact: editingSignal.impact,
       notes: editingSignal.notes, updated_at: new Date().toISOString(),
     }).eq('id', editingSignal.id);
-    setEditingSignal(null); await fetchSignals(); showToast('Ô£ô Signal updated');
+    setEditingSignal(null); await fetchSignals(); showToast('checkmark Signal updated');
   };
 
   const updateSignalStatus = async (id, status) => {
@@ -240,14 +240,14 @@ export default function CompetitiveTracker() {
   return (
     <div className={`min-h-screen ${t.bg} ${t.text} transition-colors duration-200`}>
 
-      {/* ÔöÇÔöÇ TOAST */}
+      {/*  TOAST */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl border text-sm font-medium ${toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
           <CheckCircle size={16} />{toast.message}
         </div>
       )}
 
-      {/* ÔöÇÔöÇ EDIT SIGNAL MODAL */}
+      {/*  EDIT SIGNAL MODAL */}
       {editingSignal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setEditingSignal(null)}>
           <div className={`${t.modal} border rounded-2xl w-full max-w-xl`} onClick={e => e.stopPropagation()}>
@@ -297,7 +297,7 @@ export default function CompetitiveTracker() {
         </div>
       )}
 
-      {/* ÔöÇÔöÇ HELP MODAL */}
+      {/*  HELP MODAL */}
       {showHelp && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowHelp(false)}>
           <div className={`${t.modal} border rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
@@ -316,7 +316,7 @@ export default function CompetitiveTracker() {
                   {[
                     { tab: 'Dashboard', color: 'text-blue-500', desc: 'High-level view. Click KPI cards to filter Signals. Click any vendor card to jump to that vendor in the Editor.' },
                     { tab: 'Signals', color: 'text-purple-500', desc: 'Weak signals journal. Click "+ Log New Signal" to expand the form. Validated signals from the last 30 days surface on the Dashboard.' },
-                    { tab: 'Editor', color: 'text-gray-500', desc: 'Manage vendor data ÔÇö maturity, deployment status, pricing model, buyer persona, adoption signals, and Acumatica gap.' },
+                    { tab: 'Editor', color: 'text-gray-500', desc: 'Manage vendor data — maturity, deployment status, pricing model, buyer persona, adoption signals, and Acumatica gap.' },
                   ].map(({ tab, color, desc }) => (
                     <div key={tab} className={`${t.row} rounded-xl p-4`}>
                       <div className={`font-semibold text-sm ${color} mb-1`}>{tab}</div>
@@ -332,8 +332,8 @@ export default function CompetitiveTracker() {
                     { field: 'Deployment Status', desc: 'Is the AI actually in production, or just announced? Production > Beta > Announced > Roadmap.' },
                     { field: 'Pricing Model', desc: 'Included in licence, paid add-on, or consumption-based? Affects how it\'s sold and perceived.' },
                     { field: 'Implementation Complexity', desc: 'How hard is it to turn on? High complexity reduces real threat even if capability looks strong.' },
-                    { field: 'Acumatica Gap', desc: 'Do we have this, is it on the roadmap, or a genuine gap? Fill this in manually ÔÇö requires internal judgment.' },
-                    { field: 'Buyer Persona', desc: 'Who is asking for this in deals ÔÇö CFO, IT Admin, or end user?' },
+                    { field: 'Acumatica Gap', desc: 'Do we have this, is it on the roadmap, or a genuine gap? Fill this in manually — requires internal judgment.' },
+                    { field: 'Buyer Persona', desc: 'Who is asking for this in deals — CFO, IT Admin, or end user?' },
                     { field: 'Adoption Signal', desc: 'Evidence of real uptake, not just availability. Low adoption despite availability is itself a signal.' },
                   ].map(({ field, desc }) => (
                     <div key={field} className="flex gap-3 text-sm">
@@ -348,13 +348,13 @@ export default function CompetitiveTracker() {
                 <p className={`${t.textSub} text-sm leading-relaxed mb-3`}>Signals are logged <strong className={t.text}>manually</strong> in the Signals tab. Log as <strong className={t.text}>Monitoring</strong>, mark <strong className={t.text}>Validated</strong> if it proves true, or <strong className={t.text}>Invalidated</strong> if it doesn't.</p>
                 <ul className="space-y-1.5">
                   {['A customer asks about a feature a competitor just announced','A vendor quietly changes their pricing or packaging','A partner starts recommending a competitor more often','An analyst mentions a market shift in passing'].map((ex, i) => (
-                    <li key={i} className={`${t.textSub} text-sm flex items-start gap-2`}><span className="text-purple-500 mt-0.5">ÔåÆ</span>{ex}</li>
+                    <li key={i} className={`${t.textSub} text-sm flex items-start gap-2`}><span className="text-purple-500 mt-0.5">-></span>{ex}</li>
                   ))}
                 </ul>
               </div>
               <div>
                 <h3 className="text-blue-500 font-semibold mb-2 flex items-center gap-2"><Cpu size={16} /> AI Update button</h3>
-                <p className={`${t.textSub} text-sm leading-relaxed`}>Refreshes vendor capabilities and notes using Claude AI. PIN protected. Does not log signals ÔÇö those are always manual.</p>
+                <p className={`${t.textSub} text-sm leading-relaxed`}>Refreshes vendor capabilities and notes using Claude AI. PIN protected. Does not log signals — those are always manual.</p>
               </div>
               <div className={`border-t ${t.section} pt-4`}>
                 <h3 className={`${t.textMuted} text-xs font-semibold uppercase tracking-wider mb-3`}>Useful Resources</h3>
@@ -367,24 +367,24 @@ export default function CompetitiveTracker() {
                   ].map(({ label, url }) => (
                     <a key={label} href={url} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-2 ${t.row} hover:opacity-80 ${t.textSub} text-xs px-3 py-2 rounded-lg transition-all`}>
-                      <span className="text-blue-500">Ôåù</span> {label}
+                      <span className="text-blue-500">✗</span> {label}
                     </a>
                   ))}
                 </div>
-                <p className={`${t.textFaint} text-xs mt-4 text-right`}>Last updated: February 2026 ┬À Built by Jean Fulop</p>
+                <p className={`${t.textFaint} text-xs mt-4 text-right`}>Last updated: February 2026 · Built by Jean Fulop</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ÔöÇÔöÇ TOP NAV */}
+      {/*  TOP NAV */}
       <header className={`border-b ${t.nav} backdrop-blur sticky top-0 z-10`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-8">
             <div>
               <h1 className={`text-lg font-bold ${t.text}`}>ERP Competitive Tracker</h1>
-              <p className={`text-xs ${t.textMuted}`}>by Jean Fulop ┬À {new Date().toLocaleDateString('en-AU')}</p>
+              <p className={`text-xs ${t.textMuted}`}>by Jean Fulop · {new Date().toLocaleDateString('en-AU')}</p>
             </div>
             <nav className="flex gap-1 flex-wrap">
               {[
@@ -406,7 +406,7 @@ export default function CompetitiveTracker() {
             </nav>
           </div>
           <div className="flex gap-2 items-center">
-            {/* ÔöÇÔöÇ Light/Dark toggle */}
+            {/*  Light/Dark toggle */}
             <button onClick={() => setDark(d => !d)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${t.navBtn} transition-all`}
               title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
@@ -433,15 +433,15 @@ export default function CompetitiveTracker() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
 
-        {/* ÔòÉÔòÉ DASHBOARD ÔòÉÔòÉ */}
+        {/* ══ DASHBOARD ══ */}
         {tab === 'dashboard' && (
           <div className="space-y-8">
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: 'Vendors Tracked', value: vendors.length, icon: <Shield size={20} />, color: 'text-blue-500', border: 'hover:border-blue-500/50', hint: 'View vendor grid Ôåô', action: () => document.getElementById('vendor-grid')?.scrollIntoView({ behavior: 'smooth' }) },
-                { label: 'Active Signals', value: signals.filter(s => s.status === 'Monitoring').length, icon: <Radio size={20} />, color: 'text-purple-500', border: 'hover:border-purple-500/50', hint: 'View monitoring signals ÔåÆ', action: () => goToSignals('Monitoring', 'All') },
-                { label: 'Validated Signals', value: validatedSignals.length, icon: <TrendingUp size={20} />, color: 'text-green-500', border: 'hover:border-green-500/50', hint: 'View validated signals ÔåÆ', action: () => goToSignals('Validated', 'All') },
-                { label: 'High Impact Threats', value: highImpactSignals.length, icon: <AlertTriangle size={20} />, color: 'text-red-500', border: 'hover:border-red-500/50', hint: 'View high impact signals ÔåÆ', action: () => goToSignals('All', 'High') },
+                { label: 'Vendors Tracked', value: vendors.length, icon: <Shield size={20} />, color: 'text-blue-500', border: 'hover:border-blue-500/50', hint: 'View vendor grid ↓', action: () => document.getElementById('vendor-grid')?.scrollIntoView({ behavior: 'smooth' }) },
+                { label: 'Active Signals', value: signals.filter(s => s.status === 'Monitoring').length, icon: <Radio size={20} />, color: 'text-purple-500', border: 'hover:border-purple-500/50', hint: 'View monitoring signals ->', action: () => goToSignals('Monitoring', 'All') },
+                { label: 'Validated Signals', value: validatedSignals.length, icon: <TrendingUp size={20} />, color: 'text-green-500', border: 'hover:border-green-500/50', hint: 'View validated signals ->', action: () => goToSignals('Validated', 'All') },
+                { label: 'High Impact Threats', value: highImpactSignals.length, icon: <AlertTriangle size={20} />, color: 'text-red-500', border: 'hover:border-red-500/50', hint: 'View high impact signals ->', action: () => goToSignals('All', 'High') },
               ].map(({ label, value, icon, color, border, hint, action }) => (
                 <button key={label} onClick={action} className={`${t.card} border ${border} rounded-xl p-5 text-left transition-all cursor-pointer hover:scale-105 active:scale-100 group`}>
                   <div className={`${color} mb-3 transition-transform group-hover:scale-110`}>{icon}</div>
@@ -454,11 +454,11 @@ export default function CompetitiveTracker() {
 
             {validatedSignals.length > 0 && (
               <div className={`${dark ? 'bg-green-950/40 border-green-800/50' : 'bg-green-50 border-green-200'} border rounded-xl p-6`}>
-                <h2 className="text-green-500 font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> Validated Signals ÔÇö Last 30 Days</h2>
+                <h2 className="text-green-500 font-semibold mb-3 flex items-center gap-2"><TrendingUp size={18} /> Validated Signals — Last 30 Days</h2>
                 <ul className="space-y-2">
                   {validatedSignals.map(s => (
                     <li key={s.id} className={`${t.textSub} text-sm flex items-start gap-2`}>
-                      <span className="text-green-500 mt-0.5">Ô£ô</span>
+                      <span className="text-green-500 mt-0.5">checkmark</span>
                       <span>{s.vendor_tag && <strong className={t.text}>[{s.vendor_tag}]</strong>} {s.observation}</span>
                     </li>
                   ))}
@@ -511,9 +511,9 @@ export default function CompetitiveTracker() {
                         ))}
                         {vendor.capabilities.length > 3 && <span className={`text-xs ${t.textMuted} px-2 py-1`}>+{vendor.capabilities.length - 3} more</span>}
                       </div>
-                      {vendor.buyer_persona && <p className={`text-xs ${t.textSub} mb-1`}>­ƒæñ {vendor.buyer_persona}</p>}
-                      {vendor.adoption_signal && <p className={`text-xs ${t.textMuted} italic line-clamp-2`}>­ƒôè {vendor.adoption_signal}</p>}
-                      {!vendor.buyer_persona && !vendor.adoption_signal && <p className={`text-xs ${t.textMuted} italic`}>Click to add intelligence ÔåÆ</p>}
+                      {vendor.buyer_persona && <p className={`text-xs ${t.textSub} mb-1`}>👤 {vendor.buyer_persona}</p>}
+                      {vendor.adoption_signal && <p className={`text-xs ${t.textMuted} italic line-clamp-2`}>📎 {vendor.adoption_signal}</p>}
+                      {!vendor.buyer_persona && !vendor.adoption_signal && <p className={`text-xs ${t.textMuted} italic`}>Click to add intelligence -></p>}
                     </div>
                   );
                 })}
@@ -524,26 +524,26 @@ export default function CompetitiveTracker() {
               <div className={`${t.card} border rounded-xl p-6`}>
                 <h3 className="text-green-500 font-semibold mb-4 flex items-center gap-2"><Zap size={16} /> Opportunities</h3>
                 <ul className={`space-y-2 text-sm ${t.textSub}`}>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">ÔåÆ</span> Faster agentic adoption could differentiate vs enterprise vendors</li>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">ÔåÆ</span> Mid-market focus = less competition on agentic features</li>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">ÔåÆ</span> Simpler deployment = competitive advantage in speed-to-value</li>
-                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">ÔåÆ</span> SAP's low Joule adoption is a direct positioning opportunity</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> Faster agentic adoption could differentiate vs enterprise vendors</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> Mid-market focus = less competition on agentic features</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> Simpler deployment = competitive advantage in speed-to-value</li>
+                  <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">-></span> SAP's low Joule adoption is a direct positioning opportunity</li>
                 </ul>
               </div>
               <div className={`${t.card} border rounded-xl p-6`}>
                 <h3 className="text-red-500 font-semibold mb-4 flex items-center gap-2"><AlertTriangle size={16} /> Threats</h3>
                 <ul className={`space-y-2 text-sm ${t.textSub}`}>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">ÔåÆ</span> Competitors moving faster on agentic capabilities</li>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">ÔåÆ</span> Microsoft Copilot bundling makes AI appear free to M365 customers</li>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">ÔåÆ</span> Customer expectations rising rapidly on AI features</li>
-                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">ÔåÆ</span> Odoo growing fast as low-cost alternative in lower mid-market</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Competitors moving faster on agentic capabilities</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Microsoft Copilot bundling makes AI appear free to M365 customers</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Customer expectations rising rapidly on AI features</li>
+                  <li className="flex items-start gap-2"><span className="text-red-500 mt-0.5">-></span> Odoo growing fast as low-cost alternative in lower mid-market</li>
                 </ul>
               </div>
             </div>
           </div>
         )}
 
-        {/* ÔòÉÔòÉ SIGNALS ÔòÉÔòÉ */}
+        {/* ══ SIGNALS ══ */}
         {tab === 'signals' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -551,7 +551,7 @@ export default function CompetitiveTracker() {
                 <h2 className={`text-2xl font-bold ${t.text}`}>Weak Signal Journal</h2>
                 {hasActiveFilter && (
                   <button onClick={clearFilters} className="flex items-center gap-1.5 px-3 py-1 bg-blue-600/20 border border-blue-500/40 text-blue-500 rounded-full text-xs font-medium hover:bg-blue-600/30 transition-all">
-                    {impactFilter !== 'All' ? `${impactFilter} Impact` : ''}{impactFilter !== 'All' && signalFilter !== 'All' ? ' ┬À ' : ''}{signalFilter !== 'All' ? signalFilter : ''}<X size={12} />
+                    {impactFilter !== 'All' ? `${impactFilter} Impact` : ''}{impactFilter !== 'All' && signalFilter !== 'All' ? ' · ' : ''}{signalFilter !== 'All' ? signalFilter : ''}<X size={12} />
                   </button>
                 )}
               </div>
@@ -582,12 +582,12 @@ export default function CompetitiveTracker() {
             <div className={`${t.card} border rounded-xl overflow-hidden`}>
               <button onClick={() => setShowSignalForm(v => !v)} className={`w-full flex items-center justify-between px-6 py-4 hover:opacity-80 transition-all`}>
                 <span className={`font-semibold ${t.text} flex items-center gap-2`}><Plus size={16} className="text-purple-500" /> Log New Signal</span>
-                <span className={`${t.textMuted} text-xs`}>{showSignalForm ? 'Ôû▓ Collapse' : 'Ôû╝ Expand'}</span>
+                <span className={`${t.textMuted} text-xs`}>{showSignalForm ? ' Collapse' : ' Expand'}</span>
               </button>
               {showSignalForm && (
                 <div className={`px-6 pb-6 space-y-3 border-t ${t.section} pt-4`}>
                   <textarea value={newSignal.observation} onChange={e => setNewSignal({...newSignal, observation: e.target.value})}
-                    placeholder="What did you observe? Be specific ÔÇö the more detail, the better..."
+                    placeholder="What did you observe? Be specific — the more detail, the better..."
                     className={`${inputCls} h-20 resize-none`} />
                   <div className="grid grid-cols-2 gap-3">
                     <input type="text" value={newSignal.source} onChange={e => setNewSignal({...newSignal, source: e.target.value})}
@@ -646,20 +646,20 @@ export default function CompetitiveTracker() {
                             <span className={`inline-block w-1.5 h-1.5 rounded-full ${impact.dot} mr-1.5`} />{signal.impact} Impact
                           </span>
                           <span className={`text-xs font-medium px-2 py-1 rounded-md border ${status.color}`}>{signal.status}</span>
-                          <span className={`text-xs ${t.textMuted}`}>­ƒÄ» {signal.confidence}% confident</span>
-                          <span className={`text-xs ${t.textMuted}`}>ÔÅ▒ {signal.timeline}</span>
+                          <span className={`text-xs ${t.textMuted}`}>→ {signal.confidence}% confident</span>
+                          <span className={`text-xs ${t.textMuted}`}>→ {signal.timeline}</span>
                         </div>
                         <p className={`${t.text} font-medium mb-1`}>{signal.observation}</p>
                         {signal.notes && <p className={`${t.textSub} text-sm italic`}>{signal.notes}</p>}
-                        {signal.source && <p className={`${t.textMuted} text-xs mt-1`}>­ƒôÄ {signal.source}</p>}
+                        {signal.source && <p className={`${t.textMuted} text-xs mt-1`}>💡 {signal.source}</p>}
                       </div>
                       <div className="flex gap-2 shrink-0">
                         {signal.status === 'Monitoring' && <>
-                          <button onClick={() => updateSignalStatus(signal.id, 'Validated')} className="bg-green-600/20 hover:bg-green-600/40 text-green-600 border border-green-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">Ô£ô Validate</button>
-                          <button onClick={() => updateSignalStatus(signal.id, 'Invalidated')} className={`${t.row} ${t.textSub} text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80`}>Ô£ù Dismiss</button>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Validated')} className="bg-green-600/20 hover:bg-green-600/40 text-green-600 border border-green-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">checkmark Validate</button>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Invalidated')} className={`${t.row} ${t.textSub} text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80`}>x Dismiss</button>
                         </>}
                         {signal.status !== 'Monitoring' && (
-                          <button onClick={() => updateSignalStatus(signal.id, 'Monitoring')} className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-500 border border-blue-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">Ôå® Reopen</button>
+                          <button onClick={() => updateSignalStatus(signal.id, 'Monitoring')} className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-500 border border-blue-600/30 text-xs px-3 py-1.5 rounded-lg transition-all">↩ Reopen</button>
                         )}
                         <button onClick={() => setEditingSignal({...signal})} className={`${t.textMuted} hover:text-blue-500 transition-colors p-1.5`}><PenLine size={15} /></button>
                         <button onClick={() => deleteSignal(signal.id)} className={`${t.textMuted} hover:text-red-500 transition-colors p-1.5`}><Trash2 size={15} /></button>
@@ -672,7 +672,7 @@ export default function CompetitiveTracker() {
           </div>
         )}
 
-        {/* ÔòÉÔòÉ EDITOR ÔòÉÔòÉ */}
+        {/* ══ EDITOR ══ */}
         {tab === 'editor' && (
           <div className="grid grid-cols-4 gap-6">
             <div className="col-span-1 space-y-2">
@@ -744,7 +744,7 @@ export default function CompetitiveTracker() {
                         <button onClick={() => removeCapability(cap.id)} className={`${t.textMuted} hover:text-red-500 transition-colors`}><Trash2 size={15} /></button>
                       </div>
                     ))}
-                    {selectedVendor.capabilities.length === 0 && <p className={`${t.textMuted} text-sm italic`}>No capabilities yet ÔÇö run AI Update or add manually</p>}
+                    {selectedVendor.capabilities.length === 0 && <p className={`${t.textMuted} text-sm italic`}>No capabilities yet — run AI Update or add manually</p>}
                   </div>
                   <div className="flex gap-2">
                     <input type="text" value={newCapability} onChange={e => setNewCapability(e.target.value)}
